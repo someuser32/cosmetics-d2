@@ -396,28 +396,22 @@ end
 function Cosmetic:OnNPCSpawned(event)
 	local npc = event["entindex"] ~= nil and EntIndexToHScript(event["entindex"]) or nil
 	if not IsValidEntity(npc) then return end
-	-- if npc.bFirstSpawn == nil then
+	if npc.bFirstSpawn == nil then
 		if npc:GetPlayerOwnerID() ~= nil then
-			print("has player id")
 			local original_hero = PlayerResource:GetSelectedHeroEntity(npc:GetPlayerOwnerID())
 			if npc:IsHero() then
-				print("is hero")
 				Timers:CreateTimer({endTime=0.2, callback=function()
-					print("delay")
 					if not IsValidEntity(npc) or not IsValidEntity(original_hero) then return end
-					print("valid npc")
 					if npc:IsTrueHero() then
-						print("true hero")
 						Cosmetic:EquipDOTAItems(npc:GetPlayerOwnerID())
 					elseif npc:GetUnitName() == original_hero:GetUnitName() then
-						print("not true hero")
 						Cosmetic:CopyWearables(npc)
 					end
 				end}, nil, self)
 			end
 		end
 		npc.bFirstSpawn = false
-	-- end
+	end
 end
 
 if GameRules.GetGameModeEntity ~= nil then
