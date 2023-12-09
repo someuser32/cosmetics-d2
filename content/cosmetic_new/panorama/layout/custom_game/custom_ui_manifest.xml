@@ -1,0 +1,9 @@
+<root>
+	<scripts>
+	</scripts>
+	<script>
+	</script>
+	<Panel>
+		<CustomUIElement type="Hud" layoutfile="file://{resources}/layout/custom_game/cosmetic.xml" />
+	</Panel>
+</root>

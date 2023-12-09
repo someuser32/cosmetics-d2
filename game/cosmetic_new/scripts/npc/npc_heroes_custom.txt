@@ -1,0 +1,623 @@
+"DOTAHeroes"
+{
+	"npc_dota_hero_ancient_apparition"
+	{
+		"override_hero" "npc_dota_hero_ancient_apparition"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_antimage"
+	{
+		"override_hero" "npc_dota_hero_antimage"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_axe"
+	{
+		"override_hero" "npc_dota_hero_axe"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_bane"
+	{
+		"override_hero" "npc_dota_hero_bane"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_beastmaster"
+	{
+		"override_hero" "npc_dota_hero_beastmaster"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_bloodseeker"
+	{
+		"override_hero" "npc_dota_hero_bloodseeker"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_chen"
+	{
+		"override_hero" "npc_dota_hero_chen"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_crystal_maiden"
+	{
+		"override_hero" "npc_dota_hero_crystal_maiden"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_dark_seer"
+	{
+		"override_hero" "npc_dota_hero_dark_seer"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_dazzle"
+	{
+		"override_hero" "npc_dota_hero_dazzle"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_dragon_knight"
+	{
+		"override_hero" "npc_dota_hero_dragon_knight"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_doom_bringer"
+	{
+		"override_hero" "npc_dota_hero_doom_bringer"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_drow_ranger"
+	{
+		"override_hero" "npc_dota_hero_drow_ranger"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_earthshaker"
+	{
+		"override_hero" "npc_dota_hero_earthshaker"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_enchantress"
+	{
+		"override_hero" "npc_dota_hero_enchantress"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_enigma"
+	{
+		"override_hero" "npc_dota_hero_enigma"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_faceless_void"
+	{
+		"override_hero" "npc_dota_hero_faceless_void"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_furion"
+	{
+		"override_hero" "npc_dota_hero_furion"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_juggernaut"
+	{
+		"override_hero" "npc_dota_hero_juggernaut"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_kunkka"
+	{
+		"override_hero" "npc_dota_hero_kunkka"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_leshrac"
+	{
+		"override_hero" "npc_dota_hero_leshrac"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_lich"
+	{
+		"override_hero" "npc_dota_hero_lich"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_life_stealer"
+	{
+		"override_hero" "npc_dota_hero_life_stealer"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_lina"
+	{
+		"override_hero" "npc_dota_hero_lina"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_lion"
+	{
+		"override_hero" "npc_dota_hero_lion"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_mirana"
+	{
+		"override_hero" "npc_dota_hero_mirana"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_morphling"
+	{
+		"override_hero" "npc_dota_hero_morphling"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_necrolyte"
+	{
+		"override_hero" "npc_dota_hero_necrolyte"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_nevermore"
+	{
+		"override_hero" "npc_dota_hero_nevermore"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_night_stalker"
+	{
+		"override_hero" "npc_dota_hero_night_stalker"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_omniknight"
+	{
+		"override_hero" "npc_dota_hero_omniknight"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_puck"
+	{
+		"override_hero" "npc_dota_hero_puck"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_pudge"
+	{
+		"override_hero" "npc_dota_hero_pudge"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_pugna"
+	{
+		"override_hero" "npc_dota_hero_pugna"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_rattletrap"
+	{
+		"override_hero" "npc_dota_hero_rattletrap"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_razor"
+	{
+		"override_hero" "npc_dota_hero_razor"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_riki"
+	{
+		"override_hero" "npc_dota_hero_riki"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_sand_king"
+	{
+		"override_hero" "npc_dota_hero_sand_king"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_shadow_shaman"
+	{
+		"override_hero" "npc_dota_hero_shadow_shaman"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_slardar"
+	{
+		"override_hero" "npc_dota_hero_slardar"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_sniper"
+	{
+		"override_hero" "npc_dota_hero_sniper"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_spectre"
+	{
+		"override_hero" "npc_dota_hero_spectre"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_storm_spirit"
+	{
+		"override_hero" "npc_dota_hero_storm_spirit"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_sven"
+	{
+		"override_hero" "npc_dota_hero_sven"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_tidehunter"
+	{
+		"override_hero" "npc_dota_hero_tidehunter"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_tinker"
+	{
+		"override_hero" "npc_dota_hero_tinker"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_tiny"
+	{
+		"override_hero" "npc_dota_hero_tiny"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_vengefulspirit"
+	{
+		"override_hero" "npc_dota_hero_vengefulspirit"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_venomancer"
+	{
+		"override_hero" "npc_dota_hero_venomancer"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_viper"
+	{
+		"override_hero" "npc_dota_hero_viper"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_weaver"
+	{
+		"override_hero" "npc_dota_hero_weaver"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_windrunner"
+	{
+		"override_hero" "npc_dota_hero_windrunner"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_witch_doctor"
+	{
+		"override_hero" "npc_dota_hero_witch_doctor"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_zuus"
+	{
+		"override_hero" "npc_dota_hero_zuus"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_broodmother"
+	{
+		"override_hero" "npc_dota_hero_broodmother"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_skeleton_king"
+	{
+		"override_hero" "npc_dota_hero_skeleton_king"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_queenofpain"
+	{
+		"override_hero" "npc_dota_hero_queenofpain"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_huskar"
+	{
+		"override_hero" "npc_dota_hero_huskar"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_jakiro"
+	{
+		"override_hero" "npc_dota_hero_jakiro"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_batrider"
+	{
+		"override_hero" "npc_dota_hero_batrider"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_warlock"
+	{
+		"override_hero" "npc_dota_hero_warlock"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_alchemist"
+	{
+		"override_hero" "npc_dota_hero_alchemist"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_death_prophet"
+	{
+		"override_hero" "npc_dota_hero_death_prophet"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_ursa"
+	{
+		"override_hero" "npc_dota_hero_ursa"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_bounty_hunter"
+	{
+		"override_hero" "npc_dota_hero_bounty_hunter"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_silencer"
+	{
+		"override_hero" "npc_dota_hero_silencer"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_spirit_breaker"
+	{
+		"override_hero" "npc_dota_hero_spirit_breaker"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_invoker"
+	{
+		"override_hero" "npc_dota_hero_invoker"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_clinkz"
+	{
+		"override_hero" "npc_dota_hero_clinkz"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_obsidian_destroyer"
+	{
+		"override_hero" "npc_dota_hero_obsidian_destroyer"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_shadow_demon"
+	{
+		"override_hero" "npc_dota_hero_shadow_demon"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_lycan"
+	{
+		"override_hero" "npc_dota_hero_lycan"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_lone_druid"
+	{
+		"override_hero" "npc_dota_hero_lone_druid"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_brewmaster"
+	{
+		"override_hero" "npc_dota_hero_brewmaster"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_phantom_lancer"
+	{
+		"override_hero" "npc_dota_hero_phantom_lancer"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_treant"
+	{
+		"override_hero" "npc_dota_hero_treant"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_ogre_magi"
+	{
+		"override_hero" "npc_dota_hero_ogre_magi"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_chaos_knight"
+	{
+		"override_hero" "npc_dota_hero_chaos_knight"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_phantom_assassin"
+	{
+		"override_hero" "npc_dota_hero_phantom_assassin"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_gyrocopter"
+	{
+		"override_hero" "npc_dota_hero_gyrocopter"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_rubick"
+	{
+		"override_hero" "npc_dota_hero_rubick"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_luna"
+	{
+		"override_hero" "npc_dota_hero_luna"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_wisp"
+	{
+		"override_hero" "npc_dota_hero_wisp"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_disruptor"
+	{
+		"override_hero" "npc_dota_hero_disruptor"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_undying"
+	{
+		"override_hero" "npc_dota_hero_undying"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_templar_assassin"
+	{
+		"override_hero" "npc_dota_hero_templar_assassin"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_naga_siren"
+	{
+		"override_hero" "npc_dota_hero_naga_siren"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_nyx_assassin"
+	{
+		"override_hero" "npc_dota_hero_nyx_assassin"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_keeper_of_the_light"
+	{
+		"override_hero" "npc_dota_hero_keeper_of_the_light"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_visage"
+	{
+		"override_hero" "npc_dota_hero_visage"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_meepo"
+	{
+		"override_hero" "npc_dota_hero_meepo"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_magnataur"
+	{
+		"override_hero" "npc_dota_hero_magnataur"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_centaur"
+	{
+		"override_hero" "npc_dota_hero_centaur"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_slark"
+	{
+		"override_hero" "npc_dota_hero_slark"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_shredder"
+	{
+		"override_hero" "npc_dota_hero_shredder"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_medusa"
+	{
+		"override_hero" "npc_dota_hero_medusa"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_troll_warlord"
+	{
+		"override_hero" "npc_dota_hero_troll_warlord"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_tusk"
+	{
+		"override_hero" "npc_dota_hero_tusk"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_bristleback"
+	{
+		"override_hero" "npc_dota_hero_bristleback"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_skywrath_mage"
+	{
+		"override_hero" "npc_dota_hero_skywrath_mage"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_elder_titan"
+	{
+		"override_hero" "npc_dota_hero_elder_titan"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_abaddon"
+	{
+		"override_hero" "npc_dota_hero_abaddon"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_earth_spirit"
+	{
+		"override_hero" "npc_dota_hero_earth_spirit"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_ember_spirit"
+	{
+		"override_hero" "npc_dota_hero_ember_spirit"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_legion_commander"
+	{
+		"override_hero" "npc_dota_hero_legion_commander"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_phoenix"
+	{
+		"override_hero" "npc_dota_hero_phoenix"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_terrorblade"
+	{
+		"override_hero" "npc_dota_hero_terrorblade"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_techies"
+	{
+		"override_hero" "npc_dota_hero_techies"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_oracle"
+	{
+		"override_hero" "npc_dota_hero_oracle"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_winter_wyvern"
+	{
+		"override_hero" "npc_dota_hero_winter_wyvern"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_arc_warden"
+	{
+		"override_hero" "npc_dota_hero_arc_warden"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_abyssal_underlord"
+	{
+		"override_hero" "npc_dota_hero_abyssal_underlord"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_monkey_king"
+	{
+		"override_hero" "npc_dota_hero_monkey_king"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_dark_willow"
+	{
+		"override_hero" "npc_dota_hero_dark_willow"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_pangolier"
+	{
+		"override_hero" "npc_dota_hero_pangolier"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_grimstroke"
+	{
+		"override_hero" "npc_dota_hero_grimstroke"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_mars"
+	{
+		"override_hero" "npc_dota_hero_mars"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_snapfire"
+	{
+		"override_hero" "npc_dota_hero_snapfire"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_void_spirit"
+	{
+		"override_hero" "npc_dota_hero_void_spirit"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_hoodwink"
+	{
+		"override_hero" "npc_dota_hero_hoodwink"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_dawnbreaker"
+	{
+		"override_hero" "npc_dota_hero_dawnbreaker"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_marci"
+	{
+		"override_hero" "npc_dota_hero_marci"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_primal_beast"
+	{
+		"override_hero" "npc_dota_hero_primal_beast"
+		"DisableWearables" "1"
+	}
+	"npc_dota_hero_muerta"
+	{
+		"override_hero" "npc_dota_hero_muerta"
+		"DisableWearables" "1"
+	}
+}
