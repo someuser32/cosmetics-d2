@@ -72,9 +72,9 @@ function GetEquippedItems(): EquippedItems {
 	}
 	if (default_slots.length > 0 && items_server != undefined) {
 		for (let i=0; i<default_slots.length; i++) {
-			const equipped_item = GetEquippedItem(default_slots[i])
+			const equipped_item = GetEquippedItem(default_slots[i]);
 			if (equipped_item != undefined) {
-				valid_items[default_slots[i]];
+				valid_items[default_slots[i]] = equipped_item;
 			}
 		}
 	}
