@@ -54,12 +54,12 @@ export function LinkModifier(modifier: CDOTA_Buff, linked_modifier: CDOTA_Buff, 
 	SetAttribute(modifier, "linked", {"caster": linked_modifier.GetCaster(), "ability": linked_modifier.GetAbility(), "name": linked_modifier.GetName(), "data": Object.assign({"duration": linked_modifier.GetDuration()}, modifier_data ?? {})});
 	Timers.CreateTimer({"endTime": FrameTime(), "callback": () => {
 		if (!modifier) {
-			if (linked_modifier) {
+			if (linked_modifier != undefined && linked_modifier != null) {
 				linked_modifier.Destroy();
 			}
 		} else {
 			const linked : {"caster": CDOTA_BaseNPC | undefined, "ability": CDOTABaseAbility | undefined, name: string, "data": Object} = GetAttribute(modifier, "linked");
-			if (linked) {
+			if (linked != undefined && linked != null) {
 				let link = GetAttribute(modifier, "link") as CDOTA_Buff;
 				if (!link) {
 					link = modifier.GetParent().AddNewModifier(linked["caster"], linked["ability"], linked["name"], linked["data"]);

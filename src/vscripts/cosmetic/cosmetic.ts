@@ -127,7 +127,7 @@ export class Cosmetic {
 		r.Send((req: CScriptHTTPResponse) => {
 			if (req.StatusCode == 200) {
 				_this.items_game = KVParser.LoadKeyValueFromString(req.Body, KVParser.MODE_UNIQUE) as ItemsGameKV;
-				this.HandleItems(_this.items_game);
+				_this.HandleItems(_this.items_game);
 			}
 		});
 	}
