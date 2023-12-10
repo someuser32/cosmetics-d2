@@ -113,8 +113,8 @@ export class Cosmetic {
 
 	public InitItems(): void {
 		if (this.items_game != undefined) {
-			// return this.HandleItems(this.items_game);
-			return;
+			return this.HandleItems(this.items_game);
+			// return;
 		}
 
 		const r = CreateHTTPRequestScriptVM("GET", ITEMS_GAME_URL);
@@ -150,9 +150,9 @@ export class Cosmetic {
 	}
 
 	public HandleItems(items_game: ItemsGameKV) {
-		const attach_ids : {[particle : string] : string | number} = {}
+		const attach_ids : {[particle : string] : number} = {}
 		for (const [id, attach] of Object.entries(items_game["items_game"]["attribute_controlled_attached_particles"])) {
-			attach_ids[attach["system"]] = id;
+			attach_ids[attach["system"]] = parseInt(id);
 		}
 
 		const item_ids : {
@@ -167,7 +167,7 @@ export class Cosmetic {
 					const item_name = item["item_name"] ?? item["name"] ?? "unknown";
 					const item_slot = item["item_slot"] ?? "weapon";
 					const item_icon = item["image_inventory"] ?? "";
-					const item_heroes = Object.keys(item["used_by_heroes"]) as [heroname : string];
+					const item_heroes = Object.keys(item["used_by_heroes"]) as string[];
 					const item_rarity = item["item_rarity"] ?? "common";
 					if (item["prefab"] == "bundle") {
 						const item_bundle = item["bundle"] != undefined ? Object.keys(item["bundle"]): [];
@@ -196,6 +196,12 @@ export class Cosmetic {
 							}
 						}
 						const item_styles = item_visuals["styles"] != undefined ? Object.keys(item_visuals["styles"]).length : 1;
+						if (item_heroes[0] == "npc_dota_hero_juggernaut") {
+							if (item_name.toLowerCase().indexOf("sword") !== -1) {
+								// print(item_name, item_slot)
+								// DeepPrintTable(item)
+							};
+						}
 						this.items[item_id] = {
 							"name": item_name,
 							"slot": item_slot,

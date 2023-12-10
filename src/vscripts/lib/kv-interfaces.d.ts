@@ -31,7 +31,7 @@ interface NPCHeroAdjectives {
 }
 
 interface NPCHeroPersona {
-	[persona_id : string | number] : {
+	[persona_id : number] : {
 		name : string,
 		token : string,
 		token_english : string,
@@ -41,7 +41,7 @@ interface NPCHeroPersona {
 }
 
 interface NPCHeroItemSlots {
-	[slot_id : string | number] : {
+	[slot_id : number] : {
 		SlotIndex : number,
 		SlotName : string,
 		SlotText : string,
@@ -169,7 +169,7 @@ interface NPCHeroKV {
 			[item_name : string] : string
 		} | undefined,
 		Build : {
-			[level : string | number] : string
+			[level : number] : string
 		} | undefined
 	}
 	precache : PrecacheKV | undefined,
@@ -306,7 +306,7 @@ interface ItemsGamePrefab {
 	item_class : string,
 	item_type_name : string,
 	item_name : string,
-	item_slot : string,
+	item_slot : string | undefined,
 	item_quality : string,
 	item_rarity : string,
 	min_ilevel : number,
@@ -319,7 +319,7 @@ interface ItemsGamePrefab {
 		use_string : string | undefined,
 		usage_capabilities : ItemsGameItemCapabilities | undefined,
 		sticker_qualities : {
-			[id : string | number] : string
+			[id : number] : string
 		} | undefined
 	} | undefined,
 	treasure_chest : {
@@ -349,6 +349,7 @@ interface ItemsGameItem extends ItemsGamePrefab {
 	creation_date : string,
 	image_inventory : string,
 	item_description : string,
+	item_slot : string | undefined,
 	static_attributes : {
 		[name : string] : {
 			attribute_class : string
@@ -384,7 +385,7 @@ interface ItemsGameAttributeControlledAttachedParticle {
 	attach_type : string,
 	attach_entity : string | undefined,
 	control_points : {
-		[control_point : string | number] : {
+		[control_point : number] : {
 			control_point_index : number,
 			attach_type : string,
 			attachment : string | undefined
@@ -402,7 +403,7 @@ interface ItemsGameKV {
 			num_item_presets : number
 		},
 		store_currency_pricepoints : {
-			[price : string | number] : ItemsGameStoreCurrencyPricePoint,
+			[price : number] : ItemsGameStoreCurrencyPricePoint,
 		},
 		rarities : {
 			[rarity : string] : ItemsGameRarity
@@ -414,7 +415,7 @@ interface ItemsGameKV {
 			[color : string] : ItemsGameColor
 		},
 		player_loadout_slots : {
-			[loadout_id : string | number] : string
+			[loadout_id : number] : string
 		},
 		code_referenced_icons : {
 			[icon_path : string | "icon_path"] : string
@@ -423,16 +424,16 @@ interface ItemsGameKV {
 			[prefab_name : string] : ItemsGamePrefab
 		},
 		items : {
-			[item_id : string | number] : ItemsGameItem
+			[item_id : number] : ItemsGameItem
 		},
 		item_sets : {
 			[item_name : string] : ItemsGameItemSet
 		},
 		attributes : {
-			[attribute_id : string | number] : ItemsGameAttribute
+			[attribute_id : number] : ItemsGameAttribute
 		},
 		attribute_controlled_attached_particles : {
-			[item_id : string | number] : ItemsGameAttributeControlledAttachedParticle
+			[item_id : number] : ItemsGameAttributeControlledAttachedParticle
 		}
 	}
 }
