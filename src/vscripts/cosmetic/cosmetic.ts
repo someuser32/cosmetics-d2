@@ -54,6 +54,10 @@ interface PlayersEquippedItems {
 	}
 }
 
+interface DOTAEquippedItems {
+	[slot : string] : number
+}
+
 export interface ParticlesJSON {
 	[name : string | number] : Object
 }
@@ -201,11 +205,6 @@ export class Cosmetic {
 							}
 						}
 						const item_styles = item_visuals["styles"] != undefined ? Object.keys(item_visuals["styles"]).length : 1;
-						if (item_heroes[0] == "npc_dota_hero_juggernaut") {
-							if (item_name.toLowerCase().indexOf("sword") !== -1) {
-								// DeepPrintTable(items_game["items_game"]["prefabs"][item_info["prefab"]]);
-							};
-						}
 						this.items[item_id] = {
 							"name": item_name,
 							"slot": item_slot,
@@ -337,23 +336,17 @@ export class Cosmetic {
 		if (!IsValidEntity(hero)) {
 			return false;
 		}
-		if ((hero as any).__cosmetic_slots == undefined) {
-			(hero as any).__cosmetic_slots = {};
-		}
-		const modifier_data = {"item_id": item_id, "model": item["model"], "style": style, "name": item["name"]};
-		let modifier = (hero as any).__cosmetic_slots[item["slot"]] as modifier_cosmetic_ts | undefined;
+		const modifier_data = {"item_id": item_id, "model": item.model, "style": style, "name": item.name};
+		let modifier = this.GetModifierForSlot(hero, item.slot);
 		if (modifier != undefined) {
 			modifier.Destroy();
-			modifier = undefined;
 			// modifier.OnRefresh(modifier_data);
 			// modifier.ForceRefresh();
 			modifier = modifier_cosmetic_ts.apply(hero, hero, undefined, modifier_data);
 		} else {
 			modifier = modifier_cosmetic_ts.apply(hero, hero, undefined, modifier_data);
-			print(modifier)
 		}
-		(hero as any).__cosmetic_slots[item["slot"]] = modifier;
-		modifier.ReadVisuals(item["visuals"]);
+		modifier.ReadVisuals(item.visuals);
 		modifier.ApplyVisuals();
 		// if (!ignore_default_check) {
 		// 	const default_equipped = item["type"] == "default_item";
@@ -376,19 +369,27 @@ export class Cosmetic {
 		return true;
 	}
 
+	public GetModifierForSlot(hero: CDOTA_BaseNPC, slot: string) : modifier_cosmetic_ts | undefined {
+		for (const mod of hero.FindAllModifiersByName(modifier_cosmetic_ts.name)) {
+			const modifier = mod as modifier_cosmetic_ts;
+			if (modifier.kv != undefined && modifier.kv.item_id != undefined) {
+				const item = this.items[modifier.kv.item_id] as Item;
+				if (item != undefined && item.slot == slot) {
+					return modifier;
+				}
+			}
+		}
+	}
+
 	public RemoveSlot(playerID: PlayerID, slot: string): void {
 		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
 		if (!IsValidEntity(hero)) {
 			return;
 		}
-		if ((hero as any).__cosmetic_slots == undefined || (hero as any).__cosmetic_slots[slot] == undefined) {
-			return;
-		}
-		const modifier = (hero as any).__cosmetic_slots[slot] as CDOTA_Buff;
+		const modifier = this.GetModifierForSlot(hero, slot);
 		if (modifier != undefined) {
 			modifier.Destroy();
 		}
-		(hero as any).__cosmetic_slots[slot] = undefined;
 	}
 
 	public DefaultSlot(playerID: PlayerID, slot: string, ignore_default_check?: boolean): void {
@@ -480,20 +481,16 @@ export class Cosmetic {
 		if (this.equipped_items[playerID] != undefined) {
 			delete this.equipped_items[playerID][hero.GetUnitName()];
 		}
-		// for (const [slot, mod] of Object.entries((hero as any).__cosmetic_slots)) {
+		// const dota_items : DOTAEquippedItems = GetAttribute(hero, "__cosmetic_dota_items", {});
+		// for (const [slot, slot_info] of Object.entries(this.slots[hero.GetUnitName()]["slots"])) {
 		// 	if (typeof slot != "string") {
 		// 		continue;
 		// 	}
-		// 	let equipped = false;
-		// 	if ((hero as any).__cosmetic_dota_items != undefined) {
-		// 		const item_id = (hero as any).__cosmetic_dota_items[slot];
-		// 		if (item_id != undefined) {
-		// 			this._EquipItem(playerID, item_id, 1, true);
-		// 			equipped = true;
-		// 		}
-		// 	}
-		// 	if (!equipped) {
-		// 		this.RemoveSlot(playerID, slot);
+		// 	const item_id = dota_items[slot];
+		// 	if (item_id != undefined) {
+		// 		this._EquipItem(playerID, item_id, 1, true);
+		// 	} else {
+		// 		this.DefaultSlot(playerID, slot, true);
 		// 	}
 		// }
 		for (const [slot, slot_info] of Object.entries(this.slots[hero.GetUnitName()]["slots"])) {

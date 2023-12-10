@@ -38,5 +38,5 @@ export function SetAttribute(obj: any, attribute: string, value?: any): void {
 }
 
 export function IsTempestDouble(npc: CBaseEntity): boolean {
-	return (npc as any)._is_tempest_double == true || (IsValidEntity(npc) && !npc.IsNull() && npc.IsBaseNPC() && ((npc.IsTempestDouble != undefined && npc.IsTempestDouble()) || npc.HasModifier("modifier_arc_warden_tempest_double_lua")));
+	return GetAttribute(npc, "_is_tempest_double", false) == true || (IsValidEntity(npc) && !npc.IsNull() && npc.IsBaseNPC() && ((npc.IsTempestDouble != undefined && npc.IsTempestDouble()) || npc.HasModifier("modifier_arc_warden_tempest_double_lua")));
 }

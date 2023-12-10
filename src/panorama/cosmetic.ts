@@ -105,6 +105,7 @@ function SlotsLoad(data?: NetworkedData<CustomNetTableDeclarations["cosmetic"][k
 			SelectSlot(slot_name);
 		});
 	}
+	ItemsLoad();
 }
 
 function ItemsLoad(data?: CosmeticHeroItems): void {

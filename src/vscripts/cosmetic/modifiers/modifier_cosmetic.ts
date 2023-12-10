@@ -30,6 +30,8 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 		this.style = kv.style ?? -1;
 
 		this.hEntity = CreateUnitByName("npc_dota_base_additive", this.parent.GetAbsOrigin(), false, undefined, undefined, this.parent.GetTeamNumber());
+		this.hEntity.SetDayTimeVisionRange(0);
+		this.hEntity.SetNightTimeVisionRange(0);
 		this.hEntity.FollowEntity(this.parent, true);
 		this.hEntityModifier = modifier_cosmetic_wearable_ts.apply(this.hEntity, this.parent, undefined, kv);
 	}

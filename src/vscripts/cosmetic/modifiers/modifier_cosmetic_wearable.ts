@@ -47,7 +47,7 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 	}
 
 	DeclareFunctions(): ModifierFunction[] {
-		return [ModifierFunction.ON_DEATH, ModifierFunction.ON_RESPAWN, ModifierFunction.INVISIBILITY_LEVEL];
+		return [ModifierFunction.ON_DEATH, ModifierFunction.ON_RESPAWN, ModifierFunction.INVISIBILITY_LEVEL, ModifierFunction.FIXED_DAY_VISION, ModifierFunction.FIXED_NIGHT_VISION];
 	}
 
 	OnCreated(kv: params): void {
@@ -178,5 +178,13 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 
 	GetModifierInvisibilityLevel(): number {
 		return this.parent.IsInvisible() ? 1 : 0;
+	}
+
+	GetFixedDayVision(): number {
+		return 0;
+	}
+
+	GetFixedNightVision(): number {
+		return 0;
 	}
 }
