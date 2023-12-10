@@ -86,7 +86,7 @@ function SlotsLoad(data?: NetworkedData<CustomNetTableDeclarations["cosmetic"][k
 	if (data == null) {
 		return;
 	}
-	slots_server = ObjectUtils.fromEntries(Object.entries(data["slots"] as Object).filter(([slot_name, slot_info]) => {
+	slots_server = ObjectUtils.fromEntries(Object.entries(data as Object).filter(([slot_name, slot_info]) => {
 		return !slot_name.startsWith("ability_effects_");
 	}).sort(([slot_name_a, slot_info_a], [slot_name_b, slot_info_b]) => {
 		return slot_info_a["index"] - slot_info_b["index"];

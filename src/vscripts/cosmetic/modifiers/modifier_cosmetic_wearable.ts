@@ -95,8 +95,8 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 								ParticleManager.SetParticleControlEnt(fx, cp_info["control_point_index"], this.parent, ATTACH_TYPES[cp_info["attach_type"]], cp_info["attachment"] ?? "attach_hitloc", this.parent.GetAbsOrigin(), true);
 							}
 						}
-						if (Cosmetic!.particles_json[asset["modifier"]] != undefined) {
-							for (const [cp, cp_info] of Object.entries(Cosmetic!.particles_json[asset["modifier"]])) {
+						if (GameRules.Cosmetic.particles_json[asset["modifier"]] != undefined) {
+							for (const [cp, cp_info] of Object.entries(GameRules.Cosmetic.particles_json[asset["modifier"]])) {
 								ParticleManager.SetParticleControlEnt(fx, parseInt(cp), this.parent, ATTACH_TYPES[cp_info["attach"]], cp_info["name"] ?? "attach_hitloc", this.parent.GetAbsOrigin(), true);
 							}
 						}

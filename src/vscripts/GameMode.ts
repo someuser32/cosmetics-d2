@@ -4,9 +4,8 @@ import { Cosmetic as CosmeticClass } from "./cosmetic/cosmetic";
 declare global {
     interface CDOTAGameRules {
         Addon: GameMode;
+        Cosmetic: CosmeticClass;
     }
-
-    var Cosmetic : CosmeticClass | undefined;
 }
 
 
@@ -19,21 +18,21 @@ export class GameMode {
 
     public static Activate(this: void): void {
         GameRules.Addon = new GameMode();
-        Cosmetic = new CosmeticClass();
+        GameRules.Cosmetic = new CosmeticClass();
+        GameRules.Cosmetic.InitOnce();
+        GameRules.Cosmetic.Init();
     }
 
     constructor() {
         ListenToGameEvent("game_rules_state_change", () => this.OnStateChange(), undefined);
         ListenToGameEvent("npc_spawned", (event) => this.OnNPCSpawned(event), undefined);
-        Cosmetic!.InitOnce();
-        Cosmetic!.Init();
     }
 
     public OnStateChange(): void {
         const state = GameRules.State_Get();
 
         if (state === GameState.CUSTOM_GAME_SETUP) {
-            Cosmetic!.PostInit();
+            GameRules.Cosmetic.PostInit();
         }
     }
 
@@ -51,7 +50,7 @@ export class GameMode {
                         if (!IsValidEntity(npc)) {
                             return;
                         }
-                        Cosmetic!.OnNPCSpawned(npc);
+                        GameRules.Cosmetic.OnNPCSpawned(npc);
                     }}, this);
                 }
             }
@@ -64,10 +63,10 @@ export class GameMode {
     }
 
     public ReloadInitialized(): void {
-        Cosmetic!.Init();
+        GameRules.Cosmetic.Init();
     }
 
     public ReloadPostInitialized(): void {
-        Cosmetic!.PostInit();
+        GameRules.Cosmetic.PostInit();
     }
 }

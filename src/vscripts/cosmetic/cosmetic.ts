@@ -87,8 +87,8 @@ export class Cosmetic {
 
 	public PostInit(): void {
 		this.InitSlots();
-		// this.InitItems();
-		// this.InitParticles();
+		this.InitItems();
+		this.InitParticles();
 	}
 
 	public InitSlots(): void {
@@ -232,12 +232,12 @@ export class Cosmetic {
 		for (const [item_id, item] of Object.entries(this.items)) {
 			for (const hero of item["heroes"]) {
 				if (this.hero_items[hero] == undefined) {
-					this.hero_items[hero] = {}
+					this.hero_items[hero] = {};
 				}
 				if (this.hero_items[hero][item["slot"]] == undefined) {
-					this.hero_items[hero][item["slot"]] = {}
+					this.hero_items[hero][item["slot"]] = {};
 				}
-				this.hero_items[hero][item["slot"]][parseInt(item_id)] = item
+				this.hero_items[hero][item["slot"]][parseInt(item_id)] = item;
 			}
 		}
 	}
@@ -263,7 +263,7 @@ export class Cosmetic {
 		for (const [slot, hero_items] of Object.entries(this.hero_items[heroname] || {})) {
 			items[slot] = {}
 			for (const [item_id, item] of Object.entries(hero_items)) {
-				items[slot][item_id] = Object.assign({"avaiable": 1}, ObjectUtils.filter(item, ([key, value]) => (["name", "slot", "icon", "rarity", "styles", "type"].includes(String(key)))));
+				items[slot][item_id] = Object.assign({"avaiable": 1}, ObjectUtils.filter(item, ([key, value]) => (["name", "slot", "icon", "rarity", "styles", "type"].includes(key as string))));
 			}
 		}
 		return items
