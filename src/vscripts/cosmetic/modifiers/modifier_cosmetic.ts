@@ -12,9 +12,9 @@ declare type params = {
 
 @registerModifier()
 export class modifier_cosmetic_ts extends ModifierCosmeticBase {
-	kv : params | undefined;
-	hEntity : CDOTA_BaseNPC | undefined;
-	hEntityModifier : ModifierCosmeticBase | undefined;
+	kv? : params;
+	hEntity? : CDOTA_BaseNPC;
+	hEntityModifier? : ModifierCosmeticBase;
 
 	GetAttributes(): ModifierAttribute {
 		return ModifierAttribute.PERMANENT + ModifierAttribute.MULTIPLE;
@@ -52,28 +52,36 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 		return modifier_cosmetic_ts.apply(hero, hero, undefined, this.kv);
 	}
 
-	ReadVisuals(visuals: ItemsGameItemAssetModifier): void {
-		if (visuals["styles"] != undefined && visuals["styles"][this.style] != undefined) {
-			visuals = Object.assign(visuals, visuals["styles"][this.style]);
-		}
-
-		for (const [asset_name, asset] of Object.entries(visuals)) {
-			if (typeof(asset) == "object") {
-				if (asset["style"] == undefined || asset["style"] == this.style) {
-					if (asset["type"] == "entity_model") {
-						if (asset["asset"] == undefined || asset["asset"] == this.parent.GetUnitName()) {
-							this.model = asset["modifier"];
-						} else if (asset["asset"] != undefined) {
-							this.unit_models[asset["asset"]] = asset["modifier"];
-						}
-					} else if (asset["type"] == "model_skin") {
-						this.model_skin = asset["skin"];
-					} else if (asset["type"] == "healthbar_offset") {
-						this.healthbar_offset = asset["offset"];
+	ReadAsset(asset_name: string, asset: any, array?: ItemsGameItemAssetModifier[]): void {
+		if (typeof(asset) == "object") {
+			if (array != undefined && asset["style"] == this.style) {
+				array.push({[asset_name]: asset});
+			} else if (array != undefined && (asset_name == "styles" || string.match(asset_name, "^styles_%d+$")[0] != undefined)) {
+				if (asset[this.style] != undefined) {
+					for (const [styled_asset_name, styled_asset] of Object.entries(asset[this.style])) {
+						array.push({[styled_asset_name as string]: styled_asset as any});
+					};
+				}
+			} else if (asset["style"] == undefined || (array == undefined && asset["style"] == this.style)) {
+				if (asset["type"] == "entity_model") {
+					if (asset["asset"] == undefined || asset["asset"] == this.parent.GetUnitName()) {
+						this.model = asset["modifier"];
+					} else if (asset["asset"] != undefined) {
+						this.unit_models[asset["asset"]] = {
+							"model": asset["modifier"]
+						};
 					}
+				} else if (asset["type"] == "model_skin") {
+					this.model_skin = asset["skin"];
+				} else if (asset["type"] == "healthbar_offset") {
+					this.healthbar_offset = asset["offset"];
 				}
 			}
 		}
+	}
+
+	ReadVisuals(visuals: ItemsGameItemAssetModifier): void {
+		super.ReadVisuals(visuals);
 
 		this.hEntityModifier!.ReadVisuals(visuals);
 	}

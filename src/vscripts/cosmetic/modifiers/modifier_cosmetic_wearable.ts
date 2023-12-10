@@ -79,46 +79,50 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 		}
 	}
 
-	ReadVisuals(visuals: ItemsGameItemAssetModifier): void {
-		if (visuals["styles"] != undefined && visuals["styles"][this.style] != undefined) {
-			visuals = Object.assign(visuals, visuals["styles"][this.style]);
-		}
-
-		for (const [asset_name, asset] of Object.entries(visuals)) {
-			if (typeof(asset) == "object") {
-				if (asset["style"] == undefined || asset["style"] == this.style) {
-					if (asset["type"] == "particle_create") {
-						const attachments : ItemsGameAttributeControlledAttachedParticle | undefined = asset["attachments"];
-						const fx = ParticleManager.CreateParticle(asset["modifier"], attachments != undefined ? ATTACH_TYPES[attachments!["attach_type"]] : ParticleAttachment.ABSORIGIN_FOLLOW, this.parent);
-						if (attachments != undefined && attachments["control_points"] != undefined) {
-							for (const [_, cp_info] of Object.entries(attachments["control_points"])) {
-								ParticleManager.SetParticleControlEnt(fx, cp_info["control_point_index"], this.parent, ATTACH_TYPES[cp_info["attach_type"]], cp_info["attachment"] ?? "attach_hitloc", this.parent.GetAbsOrigin(), true);
-							}
+	ReadAsset(asset_name: string, asset: any, array?: ItemsGameItemAssetModifier[]): void {
+		if (typeof(asset) == "object") {
+			if (array != undefined && asset["style"] == this.style) {
+				array.push({[asset_name]: asset});
+			} else if (array != undefined && (asset_name == "styles" || string.match(asset_name, "^styles_%d+$")[0] != undefined)) {
+				if (asset[this.style] != undefined) {
+					for (const [styled_asset_name, styled_asset] of Object.entries(asset[this.style])) {
+						array.push({[styled_asset_name as string]: styled_asset as any});
+					};
+				}
+			} else if (asset["style"] == undefined || (array == undefined && asset["style"] == this.style)) {
+				if (asset["type"] == "particle_create") {
+					const attachments : ItemsGameAttributeControlledAttachedParticle | undefined = asset["attachments"];
+					const fx = ParticleManager.CreateParticle(asset["modifier"], attachments != undefined ? ATTACH_TYPES[attachments!["attach_type"]] : ParticleAttachment.ABSORIGIN_FOLLOW, this.parent);
+					if (attachments != undefined && attachments["control_points"] != undefined) {
+						for (const [_, cp_info] of Object.entries(attachments["control_points"])) {
+							ParticleManager.SetParticleControlEnt(fx, cp_info["control_point_index"], this.parent, ATTACH_TYPES[cp_info["attach_type"]], cp_info["attachment"] ?? "attach_hitloc", this.parent.GetAbsOrigin(), true);
 						}
-						if (GameRules.Cosmetic.particles_json[asset["modifier"]] != undefined) {
-							for (const [cp, cp_info] of Object.entries(GameRules.Cosmetic.particles_json[asset["modifier"]])) {
-								ParticleManager.SetParticleControlEnt(fx, parseInt(cp), this.parent, ATTACH_TYPES[cp_info["attach"]], cp_info["name"] ?? "attach_hitloc", this.parent.GetAbsOrigin(), true);
-							}
-						}
-						this.particles[asset["modifier"]] = fx;
 					}
+					if (GameRules.Cosmetic.particles_json[asset["modifier"]] != undefined) {
+						for (const [cp, cp_info] of Object.entries(GameRules.Cosmetic.particles_json[asset["modifier"]])) {
+							ParticleManager.SetParticleControlEnt(fx, parseInt(cp), this.parent, ATTACH_TYPES[cp_info["attach"]], cp_info["name"] ?? "attach_hitloc", this.parent.GetAbsOrigin(), true);
+						}
+					}
+					this.particles[asset["modifier"]] = fx;
 				}
-			} else {
-				if (asset_name == "skin") {
-					this.model_skin = asset as number;
-				} else if (asset_name == "model_player") {
-					this.model = asset as string;
-				}
+			}
+		} else {
+			if (asset_name.startsWith("skin")) {
+				this.model_skin = asset as number;
+			} else if (asset_name.startsWith("model_player")) {
+				this.model = asset as string;
 			}
 		}
 	}
 
 	ApplyVisuals(): void {
-		const model_skin = this.model_skin;
 		const model = this.model;
-		this.parent.SetSkin(model_skin ?? 0);
 		this.parent.SetModel(model);
-		// this.parent.SetMaterialGroup("default");
+		this.parent.SetOriginalModel(model);
+
+		const model_skin = this.model_skin;
+		this.parent.SetSkin(model_skin ?? 0);
+		this.parent.SetMaterialGroup(model_skin != undefined ? model_skin.toString() : "default");
 	}
 
 	OnIntervalThink(): void {
@@ -173,6 +177,6 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 	}
 
 	GetModifierInvisibilityLevel(): number {
-		return +this.parent.IsInvisible();
+		return this.parent.IsInvisible() ? 1 : 0;
 	}
 }

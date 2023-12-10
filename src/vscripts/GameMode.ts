@@ -45,7 +45,7 @@ export class GameMode {
 		}
         const playerID = npc.GetPlayerOwnerID();
         const original_hero = playerID != -1 ? PlayerResource.GetSelectedHeroEntity(playerID): undefined;
-		if (GetAttribute(npc, "bFirstSpawn", true) == true) {
+		if (GetAttribute(npc, "bFirstSpawn", true) == true || !IsTrueHero(npc)) {
             if (npc.IsHero()) {
                 if (IsValidEntity(original_hero) || IsTrueHero(npc)) {
                     if (original_hero == undefined || npc.GetUnitName() == original_hero.GetUnitName()) {

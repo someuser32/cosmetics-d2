@@ -515,7 +515,6 @@ export class Cosmetic {
 	}
 
 	public OnNPCSpawned(npc: CDOTA_BaseNPC): void {
-		print(npc)
 		if (IsTrueHero(npc)) {
 			this.EquipDOTAItems(npc.GetPlayerOwnerID());
 		} else {

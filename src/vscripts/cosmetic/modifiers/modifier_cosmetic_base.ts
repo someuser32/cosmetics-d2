@@ -7,14 +7,22 @@ declare type params = {
 	style: number | undefined
 };
 
+interface UnitModel {
+	model : string
+}
+
+interface UnitModels {
+	[unit_name : string] : UnitModel
+}
+
 export class ModifierCosmeticBase extends BaseModifier {
 	parent : CDOTA_BaseNPC = this.GetParent();
 	style : number = -1;
 
-	model : string | undefined;
-	model_skin : number | undefined;
-	healthbar_offset : number | undefined;
-	unit_models : string[] = [];
+	model? : string;
+	model_skin? : number;
+	healthbar_offset? : number;
+	unit_models : UnitModels = {};
 
 	IsHidden(): boolean {
 		return true;
@@ -46,32 +54,49 @@ export class ModifierCosmeticBase extends BaseModifier {
 		this.style = kv.style ?? this.style;
 	}
 
+	ReadAsset(asset_name: string, asset: any, array?: ItemsGameItemAssetModifier[]): void {
+	}
+
 	ReadVisuals(visuals: ItemsGameItemAssetModifier): void {
+		const styled_assets : ItemsGameItemAssetModifier[] = [];
+		for (const [asset_name, asset] of Object.entries(visuals)) {
+			this.ReadAsset(asset_name, asset, styled_assets);
+		}
+
+		for (const styled_asset of styled_assets) {
+			for (const [asset_name, asset] of Object.entries(styled_asset)) {
+				this.ReadAsset(asset_name, asset);
+			}
+		}
 	}
 
 	ApplyVisuals(): void {
-		const model_skin : number | undefined = this.GetSharedValue("model_skin");
 		const healthbar_offset : number | undefined = this.GetSharedValue("healthbar_offset");
-		const [model, model_source] : [string, CDOTA_Modifier_Lua] | [] = this.GetSharedValueAndSource("model");
-		this.parent.SetSkin(model_skin ?? 0);
 		this.parent.SetHealthBarOffsetOverride(healthbar_offset ?? this.parent.GetBaseHealthBarOffset());
+
+		const [model, model_source] : [string, CDOTA_Modifier_Lua] | [] = this.GetSharedValueAndSource("model");
 		if (model != undefined) {
 			modifier_cosmetic_model_ts.apply(this.parent, this.parent, undefined, {"model": model});
-			const model_source_style : number | undefined = GetAttribute(model_source!, "style");
-			if (model_source_style != undefined) {
-				this.parent.SetMaterialGroup(model_source_style.toString());
-			}
+
+			// const model_source_style : number | undefined = GetAttribute(model_source!, "style");
+			// if (model_source_style != undefined) {
+			// 	this.parent.SetMaterialGroup(model_source_style.toString());
+			// }
 		} else {
 			this.parent.RemoveModifierByName(modifier_cosmetic_model_ts.name);
-			this.parent.SetMaterialGroup("default");
+			// this.parent.SetMaterialGroup("default");
 		}
+
+		const model_skin : number | undefined = this.GetSharedValue("model_skin");
+		this.parent.SetSkin(model_skin ?? 0);
+		this.parent.SetMaterialGroup(model_skin != undefined ? model_skin.toString() : "default");
 	}
 
 	ResetVisuals(): void {
 		delete this.model;
 		delete this.model_skin;
 		delete this.healthbar_offset;
-		this.unit_models = [];
+		this.unit_models = {};
 	};
 
 	OnDestroy(): void {
