@@ -31,7 +31,7 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 
 		this.hEntity = CreateUnitByName("npc_dota_base_additive", this.parent.GetAbsOrigin(), false, undefined, undefined, this.parent.GetTeamNumber());
 		this.hEntity.FollowEntity(this.parent, true);
-		this.hEntityModifier = this.hEntity.AddNewModifier(this.parent, undefined, "modifier_cosmetic_wearable_ts", kv) as modifier_cosmetic_wearable_ts;
+		this.hEntityModifier = modifier_cosmetic_wearable_ts.apply(this.hEntity, this.parent, undefined, kv);
 	}
 
 	OnRefresh(kv: params): void {
@@ -48,8 +48,8 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 		this.ResetVisuals();
 	}
 
-	CopyTo(hero: CDOTA_BaseNPC): ModifierCosmeticBase {
-		return hero.AddNewModifier(hero, undefined, this.GetName(), this.kv) as ModifierCosmeticBase;
+	CopyTo(hero: CDOTA_BaseNPC): modifier_cosmetic_ts {
+		return modifier_cosmetic_ts.apply(hero, hero, undefined, this.kv);
 	}
 
 	ReadVisuals(visuals: ItemsGameItemAssetModifier): void {

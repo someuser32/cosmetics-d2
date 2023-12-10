@@ -7,9 +7,9 @@ import { modifier_cosmetic_ts } from "./modifiers/modifier_cosmetic";
 import { modifier_cosmetic_wearable_ts } from "./modifiers/modifier_cosmetic_wearable";
 import { modifier_cosmetic_model_ts } from "./modifiers/modifier_cosmetic_model";
 
-LinkLuaModifier(modifier_cosmetic_ts.name, "cosmetic/modifiers/modifier_cosmetic", LuaModifierMotionType.NONE)
-LinkLuaModifier(modifier_cosmetic_wearable_ts.name, "cosmetic/modifiers/modifier_cosmetic_wearable", LuaModifierMotionType.NONE)
-LinkLuaModifier(modifier_cosmetic_model_ts.name, "cosmetic/modifiers/modifier_cosmetic_model", LuaModifierMotionType.NONE)
+// LinkLuaModifier(modifier_cosmetic_ts.name, "cosmetic/modifiers/modifier_cosmetic", LuaModifierMotionType.NONE)
+// LinkLuaModifier(modifier_cosmetic_wearable_ts.name, "cosmetic/modifiers/modifier_cosmetic_wearable", LuaModifierMotionType.NONE)
+// LinkLuaModifier(modifier_cosmetic_model_ts.name, "cosmetic/modifiers/modifier_cosmetic_model", LuaModifierMotionType.NONE)
 
 const ITEMS_GAME_URL = "https://raw.githubusercontent.com/spirit-bear-productions/dota_vpk_updates/main/scripts/items/items_game.txt";
 const PARTICLES_JSON_URL = "https://pastebin.com/raw/3URRriEz";
@@ -348,9 +348,9 @@ export class Cosmetic {
 			modifier = undefined;
 			// modifier.OnRefresh(modifier_data);
 			// modifier.ForceRefresh();
-			modifier = hero.AddNewModifier(hero, undefined, modifier_cosmetic_ts.name, modifier_data) as modifier_cosmetic_ts;
+			modifier = modifier_cosmetic_ts.apply(hero, hero, undefined, modifier_data);
 		} else {
-			modifier = hero.AddNewModifier(hero, undefined, modifier_cosmetic_ts.name, modifier_data) as modifier_cosmetic_ts;
+			modifier = modifier_cosmetic_ts.apply(hero, hero, undefined, modifier_data);
 			print(modifier)
 		}
 		(hero as any).__cosmetic_slots[item["slot"]] = modifier;
@@ -516,6 +516,7 @@ export class Cosmetic {
 	}
 
 	public OnNPCSpawned(npc: CDOTA_BaseNPC): void {
+		print(npc)
 		if (IsTrueHero(npc)) {
 			this.EquipDOTAItems(npc.GetPlayerOwnerID());
 		} else {

@@ -1,6 +1,8 @@
 import { GetAttribute } from "../../lib/client";
 import { BaseModifier } from "../../lib/dota_ts_adapter";
 
+import { modifier_cosmetic_model_ts } from "./modifier_cosmetic_model";
+
 declare type params = {
 	style: number | undefined
 };
@@ -54,7 +56,7 @@ export class ModifierCosmeticBase extends BaseModifier {
 		this.parent.SetSkin(model_skin ?? 0);
 		this.parent.SetHealthBarOffsetOverride(healthbar_offset ?? this.parent.GetBaseHealthBarOffset());
 		if (model != undefined) {
-			this.parent.AddNewModifier(this.parent, undefined, "modifier_cosmetic_model_ts", {"model": model});
+			modifier_cosmetic_model_ts.apply(this.parent, this.parent, undefined, {"model": model});
 			const model_source_style : number | undefined = GetAttribute(model_source!, "style");
 			if (model_source_style != undefined) {
 				this.parent.SetMaterialGroup(model_source_style.toString());

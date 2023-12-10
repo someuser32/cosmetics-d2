@@ -1,5 +1,6 @@
 import { reloadable } from "./lib/tstl-utils";
 import { Cosmetic as CosmeticClass } from "./cosmetic/cosmetic";
+import { GetAttribute, SetAttribute } from "./lib/client";
 
 declare global {
     interface CDOTAGameRules {
@@ -43,7 +44,7 @@ export class GameMode {
 		}
         const playerID = npc.GetPlayerOwnerID();
         const original_hero = playerID != -1 ? PlayerResource.GetSelectedHeroEntity(playerID): undefined;
-		if ((npc as any).bFirstSpawn != false) {
+		// if (GetAttribute(npc, "bFirstSpawn") != false) {
             if (IsValidEntity(original_hero)) {
                 if (npc.IsHero() && npc.GetUnitName() == original_hero.GetUnitName()) {
                     Timers.CreateTimer({"endTime": 0.2, "callback": () => {
@@ -54,8 +55,8 @@ export class GameMode {
                     }}, this);
                 }
             }
-            (npc as any).bFirstSpawn = false;
-        }
+            SetAttribute(npc, "bFirstSpawn", false);
+        // }
 	}
 
     public Reload(): void {
