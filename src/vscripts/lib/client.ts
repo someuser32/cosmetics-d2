@@ -26,7 +26,7 @@ export class ObjectUtils {
 }
 
 export function GetAttribute(obj: any, attribute: string, default_value?: any): any | undefined {
-	return obj[attribute] || default_value;
+	return obj[attribute] ?? default_value;
 }
 
 export function SetAttribute(obj: any, attribute: string, value?: any): void {

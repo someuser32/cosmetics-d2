@@ -128,14 +128,17 @@ export class Cosmetic {
 		this.items_game = KVParser.LoadKeyValueFromString(require("./items_game"), KVParser.MODE_UNIQUE) as ItemsGameKV;
 		this.HandleItems(this.items_game);
 
-		const _this = this;
+		// NOTE: memory leak after each map restart, so do not load kv multiple times
+		if (!IsInToolsMode()) {
+			const _this = this;
 
-		r.Send((req: CScriptHTTPResponse) => {
-			if (req.StatusCode == 200) {
-				_this.items_game = KVParser.LoadKeyValueFromString(req.Body, KVParser.MODE_UNIQUE) as ItemsGameKV;
-				_this.HandleItems(_this.items_game);
-			}
-		});
+			r.Send((req: CScriptHTTPResponse) => {
+				if (req.StatusCode == 200) {
+					_this.items_game = KVParser.LoadKeyValueFromString(req.Body, KVParser.MODE_UNIQUE) as ItemsGameKV;
+					_this.HandleItems(_this.items_game);
+				}
+			});
+		};
 	}
 
 	public InitParticles(): void {
@@ -510,7 +513,7 @@ export class Cosmetic {
 		if (!IsValidEntity(original_hero)) {
 			return;
 		}
-		for (const mod of original_hero.FindAllModifiersByName("modifier_cosmetic_ts")) {
+		for (const mod of original_hero.FindAllModifiersByName(modifier_cosmetic_ts.name)) {
 			(mod as modifier_cosmetic_ts).CopyTo(hero);
 		}
 	}

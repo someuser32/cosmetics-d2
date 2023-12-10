@@ -62,7 +62,7 @@ export class ModifierCosmeticBase extends BaseModifier {
 				this.parent.SetMaterialGroup(model_source_style.toString());
 			}
 		} else {
-			this.parent.RemoveModifierByName("modifier_cosmetic_model_ts");
+			this.parent.RemoveModifierByName(modifier_cosmetic_model_ts.name);
 			this.parent.SetMaterialGroup("default");
 		}
 	}
