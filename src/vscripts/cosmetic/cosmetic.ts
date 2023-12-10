@@ -4,6 +4,12 @@ import { IsTrueHero } from "../lib/server";
 import { MathUtils, ObjectUtils } from "../lib/client";
 
 import { modifier_cosmetic_ts } from "./modifiers/modifier_cosmetic";
+import { modifier_cosmetic_wearable_ts } from "./modifiers/modifier_cosmetic_wearable";
+import { modifier_cosmetic_model_ts } from "./modifiers/modifier_cosmetic_model";
+
+LinkLuaModifier(modifier_cosmetic_ts.name, "cosmetic/modifiers/modifier_cosmetic", LuaModifierMotionType.NONE)
+LinkLuaModifier(modifier_cosmetic_wearable_ts.name, "cosmetic/modifiers/modifier_cosmetic_wearable", LuaModifierMotionType.NONE)
+LinkLuaModifier(modifier_cosmetic_model_ts.name, "cosmetic/modifiers/modifier_cosmetic_model", LuaModifierMotionType.NONE)
 
 const ITEMS_GAME_URL = "https://raw.githubusercontent.com/spirit-bear-productions/dota_vpk_updates/main/scripts/items/items_game.txt";
 const PARTICLES_JSON_URL = "https://pastebin.com/raw/3URRriEz";
@@ -113,8 +119,8 @@ export class Cosmetic {
 
 	public InitItems(): void {
 		if (this.items_game != undefined) {
-			return this.HandleItems(this.items_game);
-			// return;
+			// return this.HandleItems(this.items_game);
+			return;
 		}
 
 		const r = CreateHTTPRequestScriptVM("GET", ITEMS_GAME_URL);
@@ -342,9 +348,10 @@ export class Cosmetic {
 			modifier = undefined;
 			// modifier.OnRefresh(modifier_data);
 			// modifier.ForceRefresh();
-			modifier = hero.AddNewModifier(hero, undefined, "modifier_cosmetic_ts", modifier_data) as modifier_cosmetic_ts;
+			modifier = hero.AddNewModifier(hero, undefined, modifier_cosmetic_ts.name, modifier_data) as modifier_cosmetic_ts;
 		} else {
-			modifier = hero.AddNewModifier(hero, undefined, "modifier_cosmetic_ts", modifier_data) as modifier_cosmetic_ts;
+			modifier = hero.AddNewModifier(hero, undefined, modifier_cosmetic_ts.name, modifier_data) as modifier_cosmetic_ts;
+			print(modifier)
 		}
 		(hero as any).__cosmetic_slots[item["slot"]] = modifier;
 		modifier.ReadVisuals(item["visuals"]);

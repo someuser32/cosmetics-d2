@@ -1,5 +1,5 @@
 import { GetAttribute } from "../../lib/client";
-import { BaseModifier, registerModifier } from "../../lib/dota_ts_adapter";
+import { BaseModifier } from "../../lib/dota_ts_adapter";
 
 declare type params = {
 	style: number | undefined
