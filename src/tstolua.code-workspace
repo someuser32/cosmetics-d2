@@ -1,0 +1,42 @@
+{
+	"folders": [
+		{
+			"path": "../content"
+		},
+		{
+			"path": "../game"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../../cosmetics-d2/content"
+		},
+		{
+			"path": "../../cosmetics-d2/game"
+		}
+	],
+	"settings": {
+		"css.lint.unknownProperties": "ignore",
+		"terminal.integrated.profiles.windows": {
+			"PowerShell": {
+				"source": "PowerShell",
+				"icon": "terminal-powershell",
+				"args": [
+					"-NoExit"
+				]
+			},
+			"Command Prompt": {
+				"path": [
+					"${env:windir}\\Sysnative\\cmd.exe",
+					"${env:windir}\\System32\\cmd.exe"
+				],
+				"args": [],
+				"icon": "terminal-cmd"
+			},
+			"Git Bash": {
+				"source": "Git Bash"
+			}
+		}
+	}
+}
