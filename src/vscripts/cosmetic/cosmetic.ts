@@ -162,7 +162,7 @@ export class Cosmetic {
 		for (const [_item_id, item_info] of Object.entries(items_game["items_game"]["items"])) {
 			const item_id = parseInt(_item_id);
 			if (!isNaN(item_id) && item_info["prefab"] != undefined && ["default_item", "wearable", "bundle"].includes(item_info["prefab"])) {
-				const item = Object.assign(items_game["items_game"]["prefabs"][item_info["prefab"]], item_info)
+				const item = Object.assign(Object.assign({}, items_game["items_game"]["prefabs"][item_info["prefab"]]), item_info)
 				if (typeof(item["used_by_heroes"]) == "object") {
 					const item_name = item["item_name"] ?? item["name"] ?? "unknown";
 					const item_slot = item["item_slot"] ?? "weapon";
@@ -198,8 +198,7 @@ export class Cosmetic {
 						const item_styles = item_visuals["styles"] != undefined ? Object.keys(item_visuals["styles"]).length : 1;
 						if (item_heroes[0] == "npc_dota_hero_juggernaut") {
 							if (item_name.toLowerCase().indexOf("sword") !== -1) {
-								// print(item_name, item_slot)
-								// DeepPrintTable(item)
+								// DeepPrintTable(items_game["items_game"]["prefabs"][item_info["prefab"]]);
 							};
 						}
 						this.items[item_id] = {
@@ -428,7 +427,7 @@ export class Cosmetic {
 
 	public UnequipDOTAItems(playerID: PlayerID): void {
 		// NOTE:
-		// for unknown reason, valve does !give us any way to remove their wearables
+		// for unknown reason, valve does not give us any way to remove their wearables
 		// neither of SetParent(undefined, undefined), SetModel("models/development/invisiblebox.vmdl"), AddEffects(EF_NODRAW), Destroy(), UTIL_Remove() works
 		// idk how to fix it without using kv DisableWearables 1
 		// if you know, PM me at steam
@@ -442,10 +441,10 @@ export class Cosmetic {
 		// 	const wearable = this.GetDOTAWearableForSlot(hero, slot)
 		// 	if wearable {
 		// 		hero.__cosmetic_dota_items[slot] = this.GetItemIDFromModel(wearable:GetModelName())
-		// 		wearable:SetParent(undefined, undefined)
-		// 		wearable:SetModel("models/development/invisiblebox.vmdl")
-		// 		wearable:AddEffects(EF_NODRAW)
-		// 		wearable:Destroy()
+		// 		wearable.SetParent(undefined, undefined)
+		// 		wearable.SetModel("models/development/invisiblebox.vmdl")
+		// 		wearable.AddEffects(EF_NODRAW)
+		// 		wearable.Destroy()
 		// 		UTIL_Remove(wearable)
 		// 	}
 		// 	if hero.__cosmetic_slots[slot] == undefined {
@@ -453,14 +452,14 @@ export class Cosmetic {
 		// 	}
 		// }
 		// for _, child in pairs(hero:GetChildren()) {
-		// 	print(child:GetClassname())
-		// 	if IsValidEntity(child) && child:GetClassname() == "dota_item_wearable" {
-		// 		const modelname = child:GetModelName()
+		// 	print(child.GetClassname())
+		// 	if IsValidEntity(child) && child.GetClassname() == "dota_item_wearable" {
+		// 		const modelname = child.GetModelName()
 		// 		if modelname == "" {
-		// 			wearable:SetParent(undefined, undefined)
-		// 			child:SetModel("models/development/invisiblebox.vmdl")
-		// 			child:AddEffects(EF_NODRAW)
-		// 			child:Destroy()
+		// 			wearable.SetParent(undefined, undefined)
+		// 			child.SetModel("models/development/invisiblebox.vmdl")
+		// 			child.AddEffects(EF_NODRAW)
+		// 			child.Destroy()
 		// 			UTIL_Remove(child)
 		// 		}
 		// 	}
