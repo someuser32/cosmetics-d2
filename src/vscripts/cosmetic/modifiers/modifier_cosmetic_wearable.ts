@@ -1,13 +1,7 @@
 import { GetAttribute } from "../../lib/client";
 import { registerModifier } from "../../lib/dota_ts_adapter";
-import { HasModifierState, LinkModifier } from "../../lib/server";
-import { ModifierCosmeticBase } from "./modifier_cosmetic_base";
-
-declare type params = {
-	style : number | undefined,
-	model : string,
-	item_id : number
-}
+import { SpecialBehavior, SpecialBehaviorInfo, SpecialBehaviorModelInfo } from "../cosmetic";
+import { ModifierCosmeticBase, params } from "./modifier_cosmetic_base";
 
 const ATTACH_TYPES : {[attach_name : string] : ParticleAttachment} = {
 	["absorigin"]: ParticleAttachment.ABSORIGIN,
@@ -27,19 +21,32 @@ const ATTACH_TYPES : {[attach_name : string] : ParticleAttachment} = {
 	["WATERWAKE"]: ParticleAttachment.WATERWAKE,
 }
 
+interface ParticleInfo {
+	pattach : ParticleAttachment,
+	control_points : {
+		[control_point : number] : {
+			pattach : ParticleAttachment,
+			attach : string
+		}
+	}
+}
+
 @registerModifier()
 export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 	caster : CDOTA_BaseNPC = this.GetCaster()!;
 	particles : {[particle_name : string] : ParticleID} = {};
+	particle_infos : {[particle_name : string] : ParticleInfo} = {};
 	model : string = "";
 
 	CheckState(): Partial<Record<ModifierState, boolean>> {
 		const states : Partial<Record<ModifierState, boolean>> = {[ModifierState.INVULNERABLE]: true, [ModifierState.NO_HEALTH_BAR]: true, [ModifierState.OUT_OF_GAME]: true, [ModifierState.MAGIC_IMMUNE]: true, [ModifierState.NO_UNIT_COLLISION]: true, [ModifierState.NOT_ON_MINIMAP]: true, [ModifierState.UNSELECTABLE]: true};
+
 		if (this.caster.IsInvisible()) {
 			states[ModifierState.INVISIBLE] = true;
 		}
+
 		if (IsServer()) {
-			if (HasModifierState(this.caster, ModifierState.TRUESIGHT_IMMUNE, [this])) {
+			if (this.caster.HasModifierState(ModifierState.TRUESIGHT_IMMUNE, [this])) {
 				states[ModifierState.TRUESIGHT_IMMUNE] = true;
 			}
 		}
@@ -68,6 +75,8 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 			return;
 		}
 
+		this.kv = kv;
+
 		this.model = kv.model;
 		this.style = kv.style ?? this.style ?? -1;
 		this.ResetVisuals();
@@ -92,18 +101,21 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 			} else if (asset["style"] == undefined || (array == undefined && asset["style"] == this.style)) {
 				if (asset["type"] == "particle_create") {
 					const attachments : ItemsGameAttributeControlledAttachedParticle | undefined = asset["attachments"];
-					const fx = ParticleManager.CreateParticle(asset["modifier"], attachments != undefined ? ATTACH_TYPES[attachments!["attach_type"]] : ParticleAttachment.ABSORIGIN_FOLLOW, this.parent);
+					const control_points : ParticleInfo["control_points"] = {};
 					if (attachments != undefined && attachments["control_points"] != undefined) {
 						for (const [_, cp_info] of Object.entries(attachments["control_points"])) {
-							ParticleManager.SetParticleControlEnt(fx, cp_info["control_point_index"], this.parent, ATTACH_TYPES[cp_info["attach_type"]], cp_info["attachment"] ?? "attach_hitloc", this.parent.GetAbsOrigin(), true);
+							const index : number = cp_info["control_point_index"] as number;
+							control_points[index] = {
+								"pattach": ATTACH_TYPES[cp_info["attach_type"]],
+								"attach": cp_info["attachment"] ?? "attach_hitloc"
+							};
 						}
 					}
-					if (GameRules.Cosmetic.particles_json[asset["modifier"]] != undefined) {
-						for (const [cp, cp_info] of Object.entries(GameRules.Cosmetic.particles_json[asset["modifier"]])) {
-							ParticleManager.SetParticleControlEnt(fx, parseInt(cp), this.parent, ATTACH_TYPES[cp_info["attach"]], cp_info["name"] ?? "attach_hitloc", this.parent.GetAbsOrigin(), true);
-						}
-					}
-					this.particles[asset["modifier"]] = fx;
+
+					this.particle_infos[asset["modifier"]] = {
+						"pattach": attachments != undefined ? ATTACH_TYPES[attachments!["attach_type"]] : ParticleAttachment.ABSORIGIN_FOLLOW,
+						"control_points": control_points
+					};
 				}
 			}
 		} else {
@@ -111,6 +123,59 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 				this.model_skin = asset as number;
 			} else if (asset_name.startsWith("model_player")) {
 				this.model = asset as string;
+			}
+		}
+	}
+
+	ReadSpecialBehavior(behavior_name: keyof SpecialBehavior, behavior: SpecialBehavior[keyof SpecialBehavior], array?: SpecialBehavior[]): void {
+		if (behavior_name == "particles") {
+			const info = (behavior as SpecialBehaviorInfo["particles"])!;
+			for (const [particle_name, particle_info] of Object.entries(info)) {
+				if (particle_info == "destroy") {
+					if (this.particle_infos[particle_name] != undefined) {
+						delete this.particle_infos[particle_name];
+					}
+				} else {
+					const pattach = ATTACH_TYPES[particle_info["pattach"] ?? ""];
+					const control_points : ParticleInfo["control_points"] = {};
+
+					if (particle_info["control_points"] != undefined) {
+						for (const [control_point, control_point_info] of Object.entries(particle_info["control_points"])) {
+							control_points[parseInt(control_point)] = {
+								"pattach": ATTACH_TYPES[control_point_info["pattach"] ?? ""] ?? ParticleAttachment.ABSORIGIN_FOLLOW,
+								"attach": control_point_info["attach"] ?? "attach_hitloc"
+							};
+						}
+					}
+
+					if (this.particles[particle_name] == undefined) {
+						this.particle_infos[particle_name] = {
+							"pattach": pattach ?? ParticleAttachment.ABSORIGIN_FOLLOW,
+							"control_points": control_points
+						}
+					} else {
+						if (pattach != undefined) {
+							this.particle_infos[particle_name]["pattach"] = pattach;
+						}
+						this.particle_infos[particle_name]["control_points"] = Object.assign(this.particle_infos[particle_name]["control_points"], control_points);
+					}
+				}
+			}
+		} else if (behavior_name == "wearable") {
+			const info = (behavior as SpecialBehaviorInfo["wearable"])!;
+			if (info["bodygroups"] != undefined) {
+				for (const [bodygroup, value] of Object.entries(info["bodygroups"])) {
+					this.model_bodygroups![bodygroup] = value;
+				}
+			}
+		} else if (behavior_name == "styles") {
+			const info = (behavior as SpecialBehavior["styles"])!;
+			if (info[this.special_style!.toString()] != undefined) {
+				if (array != undefined) {
+					for (const [name, value] of Object.entries(info[this.special_style!.toString()])) {
+						array.push({[name]: value});
+					}
+				}
 			}
 		}
 	}
@@ -123,13 +188,29 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 		const model_skin = this.model_skin;
 		this.parent.SetSkin(model_skin ?? 0);
 		this.parent.SetMaterialGroup(model_skin != undefined ? model_skin.toString() : "default");
+
+		const model_bodygroups = this.GetUnionValue("model_bodygroups") as SpecialBehaviorModelInfo["bodygroups"];
+		if (model_bodygroups != undefined) {
+			for (const [bodygroup, value] of Object.entries(model_bodygroups)) {
+				this.parent.SetBodygroupByName(bodygroup, value);
+			}
+		}
+
+		for (const [particle_name, particle_info] of Object.entries(this.particle_infos)) {
+			const fx = ParticleManager.CreateParticle(particle_name, particle_info["pattach"], this.parent);
+			print("Creating", particle_name, this.special_style)
+			for (const [control_point, control_point_info] of Object.entries(particle_info["control_points"])) {
+				ParticleManager.SetParticleControlEnt(fx, parseInt(control_point), this.parent, control_point_info["pattach"], control_point_info["attach"], this.parent.GetAbsOrigin(), true);
+			}
+			this.particles[particle_name] = fx;
+		}
 	}
 
 	OnIntervalThink(): void {
 		for (const mod of this.caster.FindAllModifiersByName("modifier_truesight")) {
 			if (GetAttribute(mod, "link") == undefined) {
-				LinkModifier(mod, this.parent.AddNewModifier(mod.GetCaster(), mod.GetAbility(), mod.GetName(), {}));
-			};
+				mod.LinkModifier(this.parent.AddNewModifier(mod.GetCaster(), mod.GetAbility(), mod.GetName(), {}));
+			}
 		}
 	}
 
@@ -137,7 +218,23 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 		if (this.style == -1) {
 			this.parent.SetSkin(0);
 		}
-		for (const [particle_name, fx] of Object.entries(this.particles)) {
+
+		if (this.model_bodygroups != undefined) {
+			for (const [bodygroup, value] of Object.entries(this.model_bodygroups)) {
+				this.parent.SetBodygroupByName(bodygroup, 0);
+			}
+
+			const model_bodygroups = this.GetUnionValue("model_bodygroups", true) as SpecialBehaviorModelInfo["bodygroups"];
+			if (model_bodygroups != undefined) {
+				for (const [bodygroup, value] of Object.entries(model_bodygroups)) {
+					this.parent.SetBodygroupByName(bodygroup, value);
+				}
+			}
+
+			this.model_bodygroups = {};
+		}
+
+		for (const fx of Object.values(this.particles)) {
 			ParticleManager.DestroyParticle(fx, true);
 			ParticleManager.ReleaseParticleIndex(fx);
 		}

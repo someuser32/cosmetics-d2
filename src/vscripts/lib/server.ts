@@ -1,47 +1,57 @@
 import { GetAttribute, SetAttribute } from "./client";
 
-export function IsMonkey(npc: CBaseEntity): boolean {
-	return IsValidEntity(npc) && !npc.IsNull() && npc.IsBaseNPC() && (npc.HasModifier("modifier_monkey_king_wukongs_command_clone_ts") || npc.HasModifier("modifier_monkey_king_fur_army_soldier_hidden") || npc.HasModifier("modifier_monkey_king_fur_army_soldier") || npc.HasModifier("modifier_monkey_king_fur_army_soldier_in_position") || npc.HasModifier("modifier_monkey_king_fur_army_soldier_inactive"));
+declare global {
+	interface CDOTA_BaseNPC {
+		IsMonkey(): boolean,
+		IsVengefulIllusion(): boolean,
+		IsTrueHero(coonsider_clones?: boolean): boolean,
+		HasModifierState(state: ModifierState, exceptions?: CDOTA_Buff[]): boolean
+	}
+
+	interface CDOTA_Buff {
+		HasModifierState(state: ModifierState): boolean,
+		LinkModifier(linked_modifier: CDOTA_Buff, modifier_data?: object): void,
+		UnlinkModifier(save?: boolean): void,
+		OnDestroyLink(): void
+	}
 }
 
-export function IsVengefulIllusion(npc: CBaseEntity): boolean {
-	return IsValidEntity(npc) && !npc.IsNull() && npc.IsBaseNPC() && npc.HasModifier("modifier_vengefulspirit_command_aura_illusion");
+CDOTA_BaseNPC.IsMonkey = function(): boolean {
+	return IsValidEntity(this) && (this.HasModifier("modifier_monkey_king_wukongs_command_clone_ts") || this.HasModifier("modifier_monkey_king_fur_army_soldier_hidden") || this.HasModifier("modifier_monkey_king_fur_army_soldier") || this.HasModifier("modifier_monkey_king_fur_army_soldier_in_position") || this.HasModifier("modifier_monkey_king_fur_army_soldier_inactive"));
 }
 
-export function IsClone(npc: CBaseEntity): boolean {
-	if (!IsValidEntity(npc) || npc.IsNull() || !npc.IsBaseNPC()) {
+CDOTA_BaseNPC.IsVengefulIllusion = function(): boolean {
+	return IsValidEntity(this) && this.HasModifier("modifier_vengefulspirit_command_aura_illusion");
+}
+
+if (GameRules.Addon == undefined) {
+	const valve_is_clone = CDOTA_BaseNPC.IsClone;
+
+	CDOTA_BaseNPC.IsClone = function(): boolean {
+		if (!IsValidEntity(this)) {
+			return false;
+		}
+		if (valve_is_clone.bind(this)()) {
+			return true;
+		}
+		const owner = PlayerResource.GetSelectedHeroEntity(this.GetPlayerOwnerID());
+		return IsValidEntity(owner) && this.entindex() != owner.entindex() && this.IsRealHero() && this.GetUnitName() == owner.GetUnitName() && !this.IsMonkey() && !this.IsVengefulIllusion() && !this.IsTempestDouble();
+	}
+}
+
+CDOTA_BaseNPC.IsTrueHero = function(consider_clones?: boolean): boolean {
+	return IsValidEntity(this) && this.IsRealHero() && !this.IsIllusion() && !this.IsMonkey() && !this.IsVengefulIllusion() && (consider_clones != true ? !this.IsClone() || this.IsTempestDouble(): true);
+}
+
+CDOTA_BaseNPC.HasModifierState = function(state: ModifierState, exceptions?: CDOTA_Buff[]): boolean {
+	if (!IsValidEntity(this)) {
 		return false;
 	}
-	if (npc.IsClone()) {
-		return true;
-	}
-	const owner = PlayerResource.GetSelectedHeroEntity(npc.GetPlayerOwnerID());
-	return IsValidEntity(owner) && npc != owner && npc.IsRealHero() && npc.GetUnitName() == owner.GetUnitName() && !npc.IsTempestDouble() && !IsMonkey(npc) && !IsVengefulIllusion(npc);
-}
-
-export function IsTempestDouble(npc: CBaseEntity): boolean {
-	return IsValidEntity(npc) && !npc.IsNull() && npc.IsBaseNPC() && npc.HasModifier("modifier_vengefulspirit_command_aura_illusion");
-}
-
-export function IsTrueHero(npc: CBaseEntity, consider_clones?: boolean): boolean {
-	return IsValidEntity(npc) && !npc.IsNull() && npc.IsBaseNPC() && npc.IsRealHero() && !npc.IsIllusion() && !IsMonkey(npc) && !IsVengefulIllusion(npc) && (consider_clones != true ? !npc.IsClone() || npc.IsTempestDouble(): true);
-}
-
-export function GetModifierStates(modifier: CDOTA_Buff) : {[state : string] : boolean} {
-	const states = {};
-	modifier.CheckStateToTable(states);
-	return states;
-}
-
-export function HasModifierState(npc: CBaseEntity, state: ModifierState, exceptions?: CDOTA_Buff[]) : boolean {
-	if (!npc.IsBaseNPC()) {
-		return false;
-	}
-	for (const mod of npc.FindAllModifiers()) {
+	for (const mod of this.FindAllModifiers()) {
 		if (exceptions && exceptions.includes(mod)) {
 			continue;
 		}
-		const states = GetModifierStates(mod);
+		const states = mod.GetModifierStates();
 		if (states[state.toString()]) {
 			return true;
 		}
@@ -49,41 +59,44 @@ export function HasModifierState(npc: CBaseEntity, state: ModifierState, excepti
 	return false;
 }
 
-export function LinkModifier(modifier: CDOTA_Buff, linked_modifier: CDOTA_Buff, modifier_data?: object): void {
-	SetAttribute(modifier, "link", linked_modifier);
-	SetAttribute(modifier, "linked", {"caster": linked_modifier.GetCaster(), "ability": linked_modifier.GetAbility(), "name": linked_modifier.GetName(), "data": Object.assign({"duration": linked_modifier.GetDuration()}, modifier_data ?? {})});
+CDOTA_Buff.HasModifierState = function(state: ModifierState): boolean {
+	return this.GetParent().HasModifierState(state, [this]);
+}
+
+CDOTA_Buff.LinkModifier = function(linked_modifier: CDOTA_Buff, modifier_data?: object): void {
+	const linked = {"caster": linked_modifier.GetCaster(), "ability": linked_modifier.GetAbility(), "name": linked_modifier.GetName(), "data": Object.assign({"duration": linked_modifier.GetDuration()}, modifier_data ?? {})};
+	SetAttribute(this, "link", linked_modifier);
 	Timers.CreateTimer({"endTime": FrameTime(), "callback": () => {
-		if (!modifier) {
-			if (linked_modifier != undefined && linked_modifier != null) {
+		if (this == undefined || this.IsNull()) {
+			if (linked_modifier != undefined && !linked_modifier.IsNull()) {
 				linked_modifier.Destroy();
 			}
 		} else {
-			const linked : {"caster": CDOTA_BaseNPC | undefined, "ability": CDOTABaseAbility | undefined, name: string, "data": Object} = GetAttribute(modifier, "linked");
 			if (linked != undefined && linked != null) {
-				let link = GetAttribute(modifier, "link") as CDOTA_Buff;
-				if (!link) {
-					link = modifier.GetParent().AddNewModifier(linked["caster"], linked["ability"], linked["name"], linked["data"]);
+				let link = GetAttribute(this, "link") as CDOTA_Buff;
+				if (link == undefined || link.IsNull()) {
+					link = this.GetParent().AddNewModifier(linked["caster"], linked["ability"], linked["name"], linked["data"]);
+					SetAttribute(this, "link", link)
 				}
-				if (link.GetRemainingTime() != modifier.GetRemainingTime()) {
-					linked_modifier.SetDuration(modifier.GetRemainingTime(), true);
+				if (link.GetRemainingTime() != this.GetRemainingTime()) {
+					linked_modifier.SetDuration(this.GetRemainingTime(), true);
 				}
 			}
 			return FrameTime();
 		}
-	}}, undefined);
+	}}, this);
 }
 
-export function UnlinkModifier(modifier: CDOTA_Buff, save?: boolean): void {
-	SetAttribute(modifier, "linked", undefined);
+CDOTA_Buff.UnlinkModifier = function(save?: boolean): void {
 	if (!save) {
-		const link = GetAttribute(modifier, "link");
-		if (link) {
+		const link = GetAttribute(this, "link") as CDOTA_Buff;
+		if (link != undefined && !link.IsNull()) {
 			link.Destroy();
 		}
 	}
-	SetAttribute(modifier, "link", undefined);
+	SetAttribute(this, "link", undefined);
 }
 
-export function OnDestroyLink(modifier: CDOTA_Buff): void {
-	UnlinkModifier(modifier)
+CDOTA_Buff.OnDestroyLink = function(): void {
+	this.UnlinkModifier();
 }

@@ -1,7 +1,6 @@
 import { reloadable } from "./lib/tstl-utils";
 import { Cosmetic as CosmeticClass } from "./cosmetic/cosmetic";
 import { GetAttribute, SetAttribute } from "./lib/client";
-import { IsTrueHero } from "./lib/server";
 
 declare global {
     interface CDOTAGameRules {
@@ -45,9 +44,9 @@ export class GameMode {
 		}
         const playerID = npc.GetPlayerOwnerID();
         const original_hero = playerID != -1 ? PlayerResource.GetSelectedHeroEntity(playerID): undefined;
-		if (GetAttribute(npc, "bFirstSpawn", true) == true || !IsTrueHero(npc)) {
+		if (GetAttribute(npc, "bFirstSpawn", true) == true || !npc.IsTrueHero()) {
             if (npc.IsHero()) {
-                if (IsValidEntity(original_hero) || IsTrueHero(npc)) {
+                if (IsValidEntity(original_hero) || npc.IsTrueHero()) {
                     if (original_hero == undefined || npc.GetUnitName() == original_hero.GetUnitName()) {
                         Timers.CreateTimer({"endTime": 0.2, "callback": () => {
                             if (!IsValidEntity(npc)) {

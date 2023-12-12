@@ -1,18 +1,13 @@
 import { registerModifier } from "../../lib/dota_ts_adapter";
-import { ModifierCosmeticBase } from "./modifier_cosmetic_base";
+import { ModifierCosmeticBase, params } from "./modifier_cosmetic_base";
 
 import { modifier_cosmetic_wearable_ts } from "./modifier_cosmetic_wearable";
 import { modifier_cosmetic_model_ts } from "./modifier_cosmetic_model";
+import { SpecialBehavior, SpecialBehaviorInfo, SpecialBehaviorModelInfo, SpecialBehaviorParticleInfo } from "../cosmetic";
 
-declare type params = {
-	style : number | undefined,
-	model : string,
-	item_id : number
-}
 
 @registerModifier()
 export class modifier_cosmetic_ts extends ModifierCosmeticBase {
-	kv? : params;
 	hEntity? : CDOTA_BaseNPC;
 	hEntityModifier? : ModifierCosmeticBase;
 
@@ -25,6 +20,7 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 			return;
 		}
 
+		this.caster = this.GetCaster()!;
 		this.parent = this.GetParent();
 		this.kv = kv;
 		this.style = kv.style ?? -1;
@@ -86,6 +82,26 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 		super.ReadVisuals(visuals);
 
 		this.hEntityModifier!.ReadVisuals(visuals);
+	}
+
+	ReadSpecialBehavior(behavior_name: keyof SpecialBehavior, behavior: SpecialBehavior[keyof SpecialBehavior], array?: SpecialBehavior[]): void {
+		if (behavior_name == "player") {
+			const info = behavior as SpecialBehaviorModelInfo;
+			if (info["bodygroups"] != undefined) {
+				for (const [bodygroup, value] of Object.entries(info["bodygroups"])) {
+					this.model_bodygroups![bodygroup] = value;
+				}
+			}
+		} else if (behavior_name == "styles") {
+			const info = behavior as {[style : string] : SpecialBehaviorInfo};
+			if (info[this.special_style!.toString()] != undefined) {
+				if (array != undefined) {
+					for (const [name, value] of Object.entries(info[this.special_style!.toString()])) {
+						array.push({[name]: value});
+					}
+				}
+			}
+		}
 	}
 
 	ApplyVisuals(): void {

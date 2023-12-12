@@ -8,12 +8,6 @@
 		},
 		{
 			"path": "."
-		},
-		{
-			"path": "../../cosmetics-d2/content"
-		},
-		{
-			"path": "../../cosmetics-d2/game"
 		}
 	],
 	"settings": {

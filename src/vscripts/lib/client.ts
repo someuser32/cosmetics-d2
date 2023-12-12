@@ -1,3 +1,20 @@
+const DOTABaseNPC = IsServer() ? CDOTA_BaseNPC : C_DOTA_BaseNPC;
+
+declare global {
+	interface DOTABaseNPC {
+		IsTempestDouble(): boolean,
+		IsTempestDoubleCustom(): boolean
+	}
+
+	interface CDOTA_BaseNPC extends DOTABaseNPC {}
+
+	interface C_DOTA_BaseNPC extends DOTABaseNPC {}
+
+	interface CDOTA_Buff {
+		GetModifierStates(): {[state : string] : boolean}
+	}
+}
+
 export class MathUtils {
 	constructor() {
 	}
@@ -37,6 +54,25 @@ export function SetAttribute(obj: any, attribute: string, value?: any): void {
 	obj[attribute] = value;
 }
 
-export function IsTempestDouble(npc: CBaseEntity): boolean {
-	return GetAttribute(npc, "_is_tempest_double", false) == true || (IsValidEntity(npc) && !npc.IsNull() && npc.IsBaseNPC() && ((npc.IsTempestDouble != undefined && npc.IsTempestDouble()) || npc.HasModifier("modifier_arc_warden_tempest_double_lua")));
+if (IsServer()) {
+	if (GameRules.Addon == undefined) {
+		const valve_is_tempest_double = CDOTA_BaseNPC.IsTempestDouble;
+		CDOTA_BaseNPC.IsTempestDouble = function(): boolean {
+			return GetAttribute(this, "_is_tempest_double", false) == true || (IsValidEntity(this) && (valve_is_tempest_double.bind(this)() || this.IsTempestDoubleCustom()));
+		}
+	}
+} else {
+	C_DOTA_BaseNPC.IsTempestDouble = function(): boolean {
+		return GetAttribute(this, "_is_tempest_double", false) == true || (IsValidEntity(this) && this.IsTempestDoubleCustom());
+	}
+}
+
+DOTABaseNPC.IsTempestDoubleCustom = function(): boolean {
+	return GetAttribute(this, "_is_tempest_double", false) == true || (IsValidEntity(this) && (this.HasModifier("modifier_arc_warden_tempest_double_lua")));
+}
+
+CDOTA_Buff.GetModifierStates = function() : {[state : string] : boolean} {
+	const states = {};
+	this.CheckStateToTable(states);
+	return states;
 }

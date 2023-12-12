@@ -1,14 +1,14 @@
-import { reloadable } from "../lib/tstl-utils";
 import "../lib/kvparser/kvparser";
-import { IsTrueHero } from "../lib/server";
-import { MathUtils, ObjectUtils } from "../lib/client";
+import { reloadable } from "../lib/tstl-utils";
+import { GetAttribute, MathUtils, ObjectUtils, SetAttribute } from "../lib/client";
 
 import { modifier_cosmetic_ts } from "./modifiers/modifier_cosmetic";
 import { modifier_cosmetic_wearable_ts } from "./modifiers/modifier_cosmetic_wearable";
 import { modifier_cosmetic_model_ts } from "./modifiers/modifier_cosmetic_model";
 
 const ITEMS_GAME_URL = "https://raw.githubusercontent.com/spirit-bear-productions/dota_vpk_updates/main/scripts/items/items_game.txt";
-const PARTICLES_JSON_URL = "https://pastebin.com/raw/3URRriEz";
+// const BEHAViORS_JSON_URL = "https://pastebin.com/raw/3URRriEz";
+const BEHAViORS_JSON_URL = "http://localhost:8000/behaviors.json";
 
 interface Slots {
 	[heroname : string] : {
@@ -27,14 +27,14 @@ interface BaseItem {
 	type : string,
 }
 
-interface Item extends BaseItem {
+export interface Item extends BaseItem {
 	model : string,
 	visuals : {
 		[asset_modifier : string] : any
 	}
 }
 
-interface Bundle extends BaseItem {
+export interface Bundle extends BaseItem {
 	bundle : string[] | number[]
 }
 
@@ -58,28 +58,64 @@ interface DOTAEquippedItems {
 	[slot : string] : number
 }
 
-export interface ParticlesJSON {
-	[name : string | number] : Object
+export interface SpecialBehaviorParticleControlPoint {
+	pattach? : string,
+	attach? : string
+}
+
+export interface SpecialBehaviorParticleInfo {
+	pattach? : string,
+	control_points? : {
+		[control_point : string] : SpecialBehaviorParticleControlPoint
+	}
+}
+
+export interface SpecialBehaviorModelInfo {
+	bodygroups? : {
+		[group : string] : number
+	},
+	skin? : number,
+	materialgroup?: string
+}
+
+export interface SpecialBehaviorInfo {
+	particles? : {
+		[particle_name : string] : SpecialBehaviorParticleInfo | "destroy"
+	},
+	player? : SpecialBehaviorModelInfo,
+	wearable? : SpecialBehaviorModelInfo
+}
+
+export interface SpecialBehavior extends SpecialBehaviorInfo {
+	styles? : {
+		[style : string] : SpecialBehaviorInfo
+	},
+	parent_style? : number
+}
+
+interface BehaviorsJSON {
+	[name : string] : SpecialBehavior
+}
+
+interface ParticleReplacements {
+	[particle_name : string] : {
+		name? : string,
+		pattach? : string,
+		control_points? : SpecialBehaviorParticleControlPoint
+	}
 }
 
 @reloadable
 export class Cosmetic {
-	slots : Slots;
+	slots : Slots = {};
 	items_game : ItemsGameKV | undefined;
-	items : Items;
-	hero_items : HeroItems;
-	model_to_ids : {[model_name : string] : number};
-	equipped_items : PlayersEquippedItems;
-	particles_json : ParticlesJSON;
+	items : Items = {};
+	hero_items : HeroItems = {};
+	model_to_ids : {[model_name : string] : number} = {};
+	equipped_items : PlayersEquippedItems = {};
+	behaviors_json : BehaviorsJSON = {};
 
 	constructor() {
-		this.slots = {} as Slots;
-		this.items_game = undefined;
-		this.items = {} as Items;
-		this.hero_items = {} as HeroItems;
-		this.model_to_ids = {} as {[model_name : string] : number};
-		this.equipped_items = {} as PlayersEquippedItems;
-		this.particles_json = {} as ParticlesJSON;
 	}
 
 	public Init(): void {
@@ -89,6 +125,23 @@ export class Cosmetic {
 		CustomGameEventManager.RegisterListener("cosmetic_request_items", (userId, event) => this.RequestItems(event));
 		CustomGameEventManager.RegisterListener("cosmetic_request_equipped_items", (userId, event) => this.RequestEquippedItems(event));
 		CustomGameEventManager.RegisterListener("cosmetic_equip_item", (userId, event) => this.EquipItem(event));
+		this.override_methods();
+	}
+
+	private override_methods(): void {
+		const valve_create_particle = ParticleManager.CreateParticle;
+
+		ParticleManager.CreateParticle = function(particleName: string, partileAttach: ParticleAttachment, owner: CBaseEntity | undefined, source?: PlayerID) {
+			const playerOwnerID = source != undefined ? source : owner != undefined && owner.IsBaseNPC() ? owner.GetPlayerOwnerID() : -1;
+			const particleReplacement = GameRules.Cosmetic.GetParticleReplacements(playerOwnerID);
+			if (particleReplacement[particleName] != undefined) {
+				if (particleReplacement[particleName]["name"] != undefined) {
+					particleName = particleReplacement[particleName]["name"]!;
+				}
+			}
+			const fx = valve_create_particle(particleName, partileAttach, owner);
+			return fx;
+		}
 	}
 
 	public PostInit(): void {
@@ -142,20 +195,26 @@ export class Cosmetic {
 	}
 
 	public InitParticles(): void {
-		if (Object.keys(this.particles_json).length > 0) {
-			return;
+		if (this.behaviors_json != undefined && Object.keys(this.behaviors_json).length > 0) {
+			// return;
 		}
 
-		this.particles_json = {} as ParticlesJSON;
+		this.behaviors_json = {} as BehaviorsJSON;
 
-		// const r = CreateHTTPRequestScriptVM("GET", PARTICLES_JSON_URL)
+		const r = CreateHTTPRequestScriptVM("GET", BEHAViORS_JSON_URL);
 
-		// r.Send((function(req: CScriptHTTPResponse) {
-		// 	print("request got")
-		// 	if (req.StatusCode == 200) {
-		// 		this.particles_json = json.decode(req.Body)
-		// 	}
-		// }).bind(this))
+		const _this = this;
+
+		r.Send((req: CScriptHTTPResponse) => {
+			if (req.StatusCode == 200) {
+				const result = json.decode(req.Body)[0];
+				if (result != undefined) {
+					_this.behaviors_json = result as BehaviorsJSON;
+				} else {
+					GameRules.SendCustomMessage("[Cosmetic] Failed to get special behaviors from database: particles or styles may look wrong", 0, 0);
+				}
+			}
+		});
 	}
 
 	public HandleItems(items_game: ItemsGameKV) {
@@ -339,10 +398,13 @@ export class Cosmetic {
 		const modifier_data = {"item_id": item_id, "model": item.model, "style": style, "name": item.name};
 		let modifier = this.GetModifierForSlot(hero, item.slot);
 		if (modifier != undefined) {
-			modifier.Destroy();
-			// modifier.OnRefresh(modifier_data);
-			// modifier.ForceRefresh();
-			modifier = modifier_cosmetic_ts.apply(hero, hero, undefined, modifier_data);
+			if (!IsInToolsMode()) {
+				modifier.OnRefresh(modifier_data);
+				modifier.ForceRefresh();
+			} else {
+				modifier.Destroy();
+				modifier = modifier_cosmetic_ts.apply(hero, hero, undefined, modifier_data);
+			}
 		} else {
 			modifier = modifier_cosmetic_ts.apply(hero, hero, undefined, modifier_data);
 		}
@@ -413,7 +475,7 @@ export class Cosmetic {
 		return this.model_to_ids[model];
 	}
 
-	public GetDOTAWearableForSlot(hero : CDOTA_BaseNPC, slot: string) {
+	public GetDOTAWearableForSlot(hero : CDOTA_BaseNPC, slot: string): CBaseEntity | undefined {
 		for (const child of hero.GetChildren()) {
 			if (IsValidEntity(child) && child.GetClassname() == "dota_item_wearable") {
 				const modelname = child.GetModelName();
@@ -435,39 +497,39 @@ export class Cosmetic {
 	public UnequipDOTAItems(playerID: PlayerID): void {
 		// NOTE:
 		// for unknown reason, valve does not give us any way to remove their wearables
-		// neither of SetParent(undefined, undefined), SetModel("models/development/invisiblebox.vmdl"), AddEffects(EF_NODRAW), Destroy(), UTIL_Remove() works
+		// neither of SetParent, SetModel, AddEffects, Destroy, UTIL_Remove works
 		// idk how to fix it without using kv DisableWearables 1
 		// if you know, PM me at steam
 
 		// const hero = PlayerResource.GetSelectedHeroEntity(playerID)
 		// if (!IsValidEntity(hero)) {
-		//	return;
+		// 	return;
 		// }
-		// hero.__cosmetic_dota_items = hero.__cosmetic_dota_items or {}
-		// for slot, hero_items in pairs(this.hero_items[hero.GetUnitName()] or {}) {
-		// 	const wearable = this.GetDOTAWearableForSlot(hero, slot)
-		// 	if wearable {
-		// 		hero.__cosmetic_dota_items[slot] = this.GetItemIDFromModel(wearable:GetModelName())
-		// 		wearable.SetParent(undefined, undefined)
-		// 		wearable.SetModel("models/development/invisiblebox.vmdl")
-		// 		wearable.AddEffects(EF_NODRAW)
-		// 		wearable.Destroy()
-		// 		UTIL_Remove(wearable)
+		// const slots = this.hero_items[hero.GetUnitName()];
+		// if (slots != undefined) {
+		// 	for (const slot of Object.keys(slots)) {
+		// 		const wearable = this.GetDOTAWearableForSlot(hero, slot);
+		// 		if (wearable != undefined) {
+		// 			SetAttribute(hero, "__cosmetic_dota_items", Object.assign(GetAttribute(hero, "__cosmetic_dota_items", {}), {[slot]: this.GetItemIDFromModel(wearable.GetModelName())}));
+		// 			// wearable.SetParent(undefined, undefined);
+		// 			// wearable.SetModel("models/development/invisiblebox.vmdl");
+		// 			wearable.AddEffects(EntityEffects.EF_NODRAW);
+		// 			wearable.Destroy();
+		// 			UTIL_Remove(wearable);
+		// 		}
+		// 		if (this.GetModifierForSlot(hero, slot) == undefined) {
+		// 			this.DefaultSlot(playerID, slot, true);
+		// 		}
 		// 	}
-		// 	if hero.__cosmetic_slots[slot] == undefined {
-		// 		this.DefaultSlot(playerID, slot, true)
-		// 	}
-		// }
-		// for _, child in pairs(hero:GetChildren()) {
-		// 	print(child.GetClassname())
-		// 	if IsValidEntity(child) && child.GetClassname() == "dota_item_wearable" {
-		// 		const modelname = child.GetModelName()
-		// 		if modelname == "" {
-		// 			wearable.SetParent(undefined, undefined)
-		// 			child.SetModel("models/development/invisiblebox.vmdl")
-		// 			child.AddEffects(EF_NODRAW)
-		// 			child.Destroy()
-		// 			UTIL_Remove(child)
+		// };
+		// for (const child of hero.GetChildren()) {
+		// 	if (IsValidEntity(child) && child.GetClassname() == "dota_item_wearable") {
+		// 		if (child.GetModelName() == "") {
+		// 			// child.SetParent(undefined, undefined);
+		// 			// child.SetModel("models/development/invisiblebox.vmdl");
+		// 			child.AddEffects(EntityEffects.EF_NODRAW);
+		// 			child.Destroy();
+		// 			UTIL_Remove(child);
 		// 		}
 		// 	}
 		// }
@@ -512,10 +574,14 @@ export class Cosmetic {
 	}
 
 	public OnNPCSpawned(npc: CDOTA_BaseNPC): void {
-		if (IsTrueHero(npc)) {
+		if (npc.IsTrueHero()) {
 			this.EquipDOTAItems(npc.GetPlayerOwnerID());
 		} else {
 			this.CopyWearables(npc);
 		}
+	}
+
+	public GetParticleReplacements(playerID: PlayerID): ParticleReplacements {
+		return {} as ParticleReplacements;
 	}
 }
