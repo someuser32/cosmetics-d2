@@ -5,9 +5,8 @@ declare global {
 }
 
 
-import { CosmeticModifier } from "./cosmetic/cosmetic";
 import "./lib/client";
+import { CosmeticModifier } from "./cosmetic/modifiers/basemodifier";
 
 
-export declare interface BaseModifier extends CosmeticModifier {};
 export declare class BaseModifier extends CosmeticModifier {};

@@ -24,7 +24,7 @@ CDOTA_BaseNPC.IsVengefulIllusion = function(): boolean {
 	return IsValidEntity(this) && this.HasModifier("modifier_vengefulspirit_command_aura_illusion");
 }
 
-if (GameRules.Addon == undefined) {
+if (GameRules == undefined || GameRules.Addon == undefined) {
 	const valve_is_clone = CDOTA_BaseNPC.IsClone;
 
 	CDOTA_BaseNPC.IsClone = function(): boolean {

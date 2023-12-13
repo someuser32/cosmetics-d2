@@ -5,7 +5,6 @@ import { GetAttribute, MathUtils, ObjectUtils, SetAttribute } from "../lib/clien
 import { modifier_cosmetic_ts } from "./modifiers/modifier_cosmetic";
 import { modifier_cosmetic_wearable_ts } from "./modifiers/modifier_cosmetic_wearable";
 import { modifier_cosmetic_model_ts } from "./modifiers/modifier_cosmetic_model";
-import { BaseModifier as BaseModifierTS } from "../lib/dota_ts_adapter";
 
 const ITEMS_GAME_URL = "https://raw.githubusercontent.com/spirit-bear-productions/dota_vpk_updates/main/scripts/items/items_game.txt";
 // const BEHAViORS_JSON_URL = "https://pastebin.com/raw/3URRriEz";
@@ -635,19 +634,5 @@ export class Cosmetic {
 			Object.assign(replacements, modifier.particle_replacements);
 		}
 		return replacements;
-	}
-}
-
-export declare interface CosmeticModifier extends BaseModifierTS {
-	GetEffect(): string
-}
-
-export class CosmeticModifier extends BaseModifierTS {
-	GetEffectName(): string {
-		return this.GetEffect();
-	}
-
-	GetEffect(): string {
-		return "";
 	}
 }

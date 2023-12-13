@@ -55,7 +55,7 @@ export function SetAttribute(obj: any, attribute: string, value?: any): void {
 }
 
 if (IsServer()) {
-	if (GameRules.Addon == undefined) {
+	if (GameRules == undefined || GameRules.Addon == undefined) {
 		const valve_is_tempest_double = CDOTA_BaseNPC.IsTempestDouble;
 		CDOTA_BaseNPC.IsTempestDouble = function(): boolean {
 			return GetAttribute(this, "_is_tempest_double", false) == true || (IsValidEntity(this) && (valve_is_tempest_double.bind(this)() || this.IsTempestDoubleCustom()));
