@@ -1,25 +1,8 @@
 import { GetAttribute } from "../../lib/client";
 import { registerModifier } from "../../lib/dota_ts_adapter";
-import { SpecialBehavior, SpecialBehaviorInfo, SpecialBehaviorModelInfo } from "../cosmetic";
+import { ATTACH_TYPES, SpecialBehavior, SpecialBehaviorInfo, SpecialBehaviorModelInfo } from "../cosmetic";
 import { ModifierCosmeticBase, params } from "./modifier_cosmetic_base";
 
-const ATTACH_TYPES : {[attach_name : string] : ParticleAttachment} = {
-	["absorigin"]: ParticleAttachment.ABSORIGIN,
-	["absorigin_follow"]: ParticleAttachment.ABSORIGIN_FOLLOW,
-	["customorigin"]: ParticleAttachment.CUSTOMORIGIN,
-	["customorigin_follow"]: ParticleAttachment.CUSTOMORIGIN_FOLLOW,
-	["EYES_FOLLOW"]: ParticleAttachment.EYES_FOLLOW,
-	["point_follow"]: ParticleAttachment.POINT_FOLLOW,
-	["renderorigin_follow"]: ParticleAttachment.RENDERORIGIN_FOLLOW,
-	["worldorigin"]: ParticleAttachment.WORLDORIGIN,
-	["CENTER_FOLLOW"]: ParticleAttachment.CENTER_FOLLOW,
-	["CUSTOM_GAME_STATE_1"]: ParticleAttachment.CUSTOM_GAME_STATE_1,
-	["MAIN_VIEW"]: ParticleAttachment.MAIN_VIEW,
-	["OVERHEAD_FOLLOW"]: ParticleAttachment.OVERHEAD_FOLLOW,
-	["POINT"]: ParticleAttachment.POINT,
-	["ROOTBONE_FOLLOW"]: ParticleAttachment.ROOTBONE_FOLLOW,
-	["WATERWAKE"]: ParticleAttachment.WATERWAKE,
-}
 
 interface ParticleInfo {
 	pattach : ParticleAttachment,
@@ -136,28 +119,32 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 						delete this.particle_infos[particle_name];
 					}
 				} else {
-					const pattach = ATTACH_TYPES[particle_info["pattach"] ?? ""];
-					const control_points : ParticleInfo["control_points"] = {};
+					const create_particle = particle_info["create_on_equip"] ?? true;
 
-					if (particle_info["control_points"] != undefined) {
-						for (const [control_point, control_point_info] of Object.entries(particle_info["control_points"])) {
-							control_points[parseInt(control_point)] = {
-								"pattach": ATTACH_TYPES[control_point_info["pattach"] ?? ""] ?? ParticleAttachment.ABSORIGIN_FOLLOW,
-								"attach": control_point_info["attach"] ?? "attach_hitloc"
-							};
-						}
-					}
+					if (create_particle || this.particles[particle_name] != undefined) {
+						const pattach = ATTACH_TYPES[particle_info["pattach"] ?? ""];
+						const control_points : ParticleInfo["control_points"] = {};
 
-					if (this.particles[particle_name] == undefined) {
-						this.particle_infos[particle_name] = {
-							"pattach": pattach ?? ParticleAttachment.ABSORIGIN_FOLLOW,
-							"control_points": control_points
+						if (particle_info["control_points"] != undefined) {
+							for (const [control_point, control_point_info] of Object.entries(particle_info["control_points"])) {
+								control_points[parseInt(control_point)] = {
+									"pattach": ATTACH_TYPES[control_point_info["pattach"] ?? ""] ?? ParticleAttachment.ABSORIGIN_FOLLOW,
+									"attach": control_point_info["attach"] ?? "attach_hitloc"
+								};
+							}
 						}
-					} else {
-						if (pattach != undefined) {
-							this.particle_infos[particle_name]["pattach"] = pattach;
+
+						if (this.particles[particle_name] == undefined) {
+							this.particle_infos[particle_name] = {
+								"pattach": pattach ?? ParticleAttachment.ABSORIGIN_FOLLOW,
+								"control_points": control_points
+							}
+						} else {
+							if (pattach != undefined) {
+								this.particle_infos[particle_name]["pattach"] = pattach;
+							}
+							this.particle_infos[particle_name]["control_points"] = Object.assign(this.particle_infos[particle_name]["control_points"], control_points);
 						}
-						this.particle_infos[particle_name]["control_points"] = Object.assign(this.particle_infos[particle_name]["control_points"], control_points);
 					}
 				}
 			}

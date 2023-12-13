@@ -5,10 +5,35 @@ import { GetAttribute, MathUtils, ObjectUtils, SetAttribute } from "../lib/clien
 import { modifier_cosmetic_ts } from "./modifiers/modifier_cosmetic";
 import { modifier_cosmetic_wearable_ts } from "./modifiers/modifier_cosmetic_wearable";
 import { modifier_cosmetic_model_ts } from "./modifiers/modifier_cosmetic_model";
+import { BaseModifier as BaseModifierTS } from "../lib/dota_ts_adapter";
 
 const ITEMS_GAME_URL = "https://raw.githubusercontent.com/spirit-bear-productions/dota_vpk_updates/main/scripts/items/items_game.txt";
 // const BEHAViORS_JSON_URL = "https://pastebin.com/raw/3URRriEz";
 const BEHAViORS_JSON_URL = "http://localhost:8000/behaviors.json";
+
+declare global {
+	interface ParticleManager {
+		CreateParticle(particleName: string, particleAttach: ParticleAttachment, owner: CBaseEntity | undefined, source?: PlayerID) : ParticleID
+	}
+}
+
+export const ATTACH_TYPES : {[attach_name : string] : ParticleAttachment} = {
+	["absorigin"]: ParticleAttachment.ABSORIGIN,
+	["absorigin_follow"]: ParticleAttachment.ABSORIGIN_FOLLOW,
+	["customorigin"]: ParticleAttachment.CUSTOMORIGIN,
+	["customorigin_follow"]: ParticleAttachment.CUSTOMORIGIN_FOLLOW,
+	["EYES_FOLLOW"]: ParticleAttachment.EYES_FOLLOW,
+	["point_follow"]: ParticleAttachment.POINT_FOLLOW,
+	["renderorigin_follow"]: ParticleAttachment.RENDERORIGIN_FOLLOW,
+	["worldorigin"]: ParticleAttachment.WORLDORIGIN,
+	["CENTER_FOLLOW"]: ParticleAttachment.CENTER_FOLLOW,
+	["CUSTOM_GAME_STATE_1"]: ParticleAttachment.CUSTOM_GAME_STATE_1,
+	["MAIN_VIEW"]: ParticleAttachment.MAIN_VIEW,
+	["OVERHEAD_FOLLOW"]: ParticleAttachment.OVERHEAD_FOLLOW,
+	["POINT"]: ParticleAttachment.POINT,
+	["ROOTBONE_FOLLOW"]: ParticleAttachment.ROOTBONE_FOLLOW,
+	["WATERWAKE"]: ParticleAttachment.WATERWAKE,
+}
 
 interface Slots {
 	[heroname : string] : {
@@ -67,7 +92,8 @@ export interface SpecialBehaviorParticleInfo {
 	pattach? : string,
 	control_points? : {
 		[control_point : string] : SpecialBehaviorParticleControlPoint
-	}
+	},
+	create_on_equip?: boolean
 }
 
 export interface SpecialBehaviorModelInfo {
@@ -97,11 +123,13 @@ interface BehaviorsJSON {
 	[name : string] : SpecialBehavior
 }
 
-interface ParticleReplacements {
+export interface ParticleReplacements {
 	[particle_name : string] : {
 		name? : string,
-		pattach? : string,
-		control_points? : SpecialBehaviorParticleControlPoint
+		pattach? : ParticleAttachment,
+		control_points? : {
+			[control_point : string] : SpecialBehaviorParticleControlPoint
+		},
 	}
 }
 
@@ -114,6 +142,7 @@ export class Cosmetic {
 	model_to_ids : {[model_name : string] : number} = {};
 	equipped_items : PlayersEquippedItems = {};
 	behaviors_json : BehaviorsJSON = {};
+	// particle_owners : {[particle : ParticleID] : [string, PlayerID]} = {}
 
 	constructor() {
 	}
@@ -131,15 +160,29 @@ export class Cosmetic {
 	private override_methods(): void {
 		const valve_create_particle = ParticleManager.CreateParticle;
 
-		ParticleManager.CreateParticle = function(particleName: string, partileAttach: ParticleAttachment, owner: CBaseEntity | undefined, source?: PlayerID) {
+		ParticleManager.CreateParticle = function(particleName: string, partileAttach: ParticleAttachment, owner: CBaseEntity | undefined, source?: PlayerID): ParticleID {
 			const playerOwnerID = source != undefined ? source : owner != undefined && owner.IsBaseNPC() ? owner.GetPlayerOwnerID() : -1;
 			const particleReplacement = GameRules.Cosmetic.GetParticleReplacements(playerOwnerID);
 			if (particleReplacement[particleName] != undefined) {
 				if (particleReplacement[particleName]["name"] != undefined) {
 					particleName = particleReplacement[particleName]["name"]!;
 				}
+
+				if (particleReplacement[particleName]["pattach"] != undefined) {
+					partileAttach = particleReplacement[particleName]["pattach"]!;
+				}
 			}
 			const fx = valve_create_particle(particleName, partileAttach, owner);
+			// if (playerOwnerID != -1) {
+			// 	GameRules.Cosmetic.particle_owners[fx] = [particleName, playerOwnerID];
+			// }
+			if (particleReplacement[particleName] != undefined && owner != undefined) {
+				if (particleReplacement[particleName]["control_points"] != undefined) {
+					for (const [control_point_index, control_point] of Object.entries(particleReplacement[particleName]["control_points"]!)) {
+						ParticleManager.SetParticleControlEnt(fx, parseInt(control_point_index), owner, ATTACH_TYPES[control_point["pattach"] ?? ""] ?? ParticleAttachment.ABSORIGIN_FOLLOW, control_point["attach"] ?? "attach_hitloc", owner?.GetAbsOrigin(), true);
+					}
+				}
+			}
 			return fx;
 		}
 	}
@@ -582,6 +625,29 @@ export class Cosmetic {
 	}
 
 	public GetParticleReplacements(playerID: PlayerID): ParticleReplacements {
-		return {} as ParticleReplacements;
+		const replacements : ParticleReplacements = {};
+		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
+		if (!IsValidEntity(hero)) {
+			return replacements;
+		}
+		for (const mod of hero.FindAllModifiersByName(modifier_cosmetic_ts.name)) {
+			const modifier = mod as modifier_cosmetic_ts;
+			Object.assign(replacements, modifier.particle_replacements);
+		}
+		return replacements;
+	}
+}
+
+export declare interface CosmeticModifier extends BaseModifierTS {
+	GetEffect(): string
+}
+
+export class CosmeticModifier extends BaseModifierTS {
+	GetEffectName(): string {
+		return this.GetEffect();
+	}
+
+	GetEffect(): string {
+		return "";
 	}
 }

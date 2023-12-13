@@ -1,0 +1,117 @@
+{
+	"-1": {
+		"particles": {
+			"particle.vpcf": {
+				"pattach": "absorigin_follow",
+				"control_points": {
+					"-1": {
+						"pattach": "absorigin_follow",
+						"attach": "attach_hitloc"
+					}
+				},
+				"create_on_equip": true
+			}
+		},
+		"player": {
+			"bodygroups": {
+				"arcana": -1
+			},
+			"skin": -1,
+			"materialgroup": "-1"
+		},
+		"wearable": {
+			"bodygroups": {
+				"arcana": -1
+			},
+			"skin": -1,
+			"materialgroup": "-1"
+		},
+		"styles": {
+			"-1": {}
+		},
+		"parent_style": -1
+	},
+	"7": {
+		"particles": {
+			"particles/units/heroes/hero_juggernaut/juggernaut_blade_generic.vpcf": {
+				"control_points": {
+					"0": {
+						"pattach": "point_follow",
+						"attach": "blade_attachment"
+					}
+				}
+			}
+		}
+	},
+	"9662": {
+		"styles": {
+			"0": {
+				"particles": {
+					"particles/econ/items/spectre/spectre_arcana/spectre_arcana_ambient.vpcf": {
+						"create_on_equip": true
+					}
+				}
+			},
+			"1": {
+				"particles": {
+					"particles/econ/items/spectre/spectre_arcana/spectre_arcana_ambient_v2.vpcf": {
+						"create_on_equip": true
+					}
+				},
+				"wearable": {
+					"bodygroups": {
+						"arcana": 2
+					}
+				}
+			}
+		}
+	},
+	"9663": {
+		"styles": {
+			"1": {
+				"wearable": {
+					"bodygroups": {
+						"arcana": 2
+					}
+				}
+			}
+		},
+		"parent_style": 9662
+	},
+	"12312": {
+		"styles": {
+			"1": {
+				"wearable": {
+					"bodygroups": {
+						"arcana": 2
+					}
+				}
+			}
+		},
+		"parent_style": 9662
+	},
+	"12313": {
+		"styles": {
+			"1": {
+				"wearable": {
+					"bodygroups": {
+						"arcana": 2
+					}
+				}
+			}
+		},
+		"parent_style": 9662
+	},
+	"12314": {
+		"styles": {
+			"1": {
+				"wearable": {
+					"bodygroups": {
+						"arcana": 2
+					}
+				}
+			}
+		},
+		"parent_style": 9662
+	}
+}

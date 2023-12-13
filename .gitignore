@@ -1,12 +1,19 @@
+# Modules
 node_modules
 
-.github/*
-.vscode/*
-*/.vscode/*
-task.bat
+# Config
+.github
+.vscode
 .editorconfig
 scripts/*
+**/.env
 
+# Generated files
+**/items_game.txt
+**/non_configurable.txt
+**/behaviors.json
+
+# TypeScript compiled files
 /content/panorama/scripts/custom_game/**/*.js
 /game/scripts/vscripts/**/*.lua
 

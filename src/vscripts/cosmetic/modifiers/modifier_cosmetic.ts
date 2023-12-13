@@ -3,13 +3,14 @@ import { ModifierCosmeticBase, params } from "./modifier_cosmetic_base";
 
 import { modifier_cosmetic_wearable_ts } from "./modifier_cosmetic_wearable";
 import { modifier_cosmetic_model_ts } from "./modifier_cosmetic_model";
-import { SpecialBehavior, SpecialBehaviorInfo, SpecialBehaviorModelInfo, SpecialBehaviorParticleInfo } from "../cosmetic";
+import { SpecialBehavior, SpecialBehaviorInfo, SpecialBehaviorModelInfo, ParticleReplacements } from "../cosmetic";
 
 
 @registerModifier()
 export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 	hEntity? : CDOTA_BaseNPC;
 	hEntityModifier? : ModifierCosmeticBase;
+	particle_replacements : ParticleReplacements = {};
 
 	GetAttributes(): ModifierAttribute {
 		return ModifierAttribute.PERMANENT + ModifierAttribute.MULTIPLE;
@@ -73,6 +74,11 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 					this.model_skin = asset["skin"];
 				} else if (asset["type"] == "healthbar_offset") {
 					this.healthbar_offset = asset["offset"];
+				} else if (asset["type"] == "particle") {
+					const [original_particle, modified_particle] = [asset["asset"], asset["modifier"]];
+					if (original_particle != undefined && modified_particle != undefined) {
+						this.particle_replacements[original_particle] = {"name": modified_particle};
+					}
 				}
 			}
 		}

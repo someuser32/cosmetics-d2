@@ -1,4 +1,5 @@
-import { BaseModifier, registerModifier } from "../../lib/dota_ts_adapter";
+import { registerModifier } from "../../lib/dota_ts_adapter";
+import { BaseModifier } from "../../addon_init";
 
 declare type params = {
 	model: string
