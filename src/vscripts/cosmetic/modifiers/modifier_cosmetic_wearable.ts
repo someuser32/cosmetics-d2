@@ -83,6 +83,11 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 				}
 			} else if (asset["style"] == undefined || (array == undefined && asset["style"] == this.style)) {
 				if (asset["type"] == "particle_create") {
+					const particle_name = asset["modifier"] ?? asset["asset"];
+					if (particle_name == undefined) {
+						return;
+					}
+
 					const attachments : ItemsGameAttributeControlledAttachedParticle | undefined = asset["attachments"];
 					const control_points : ParticleInfo["control_points"] = {};
 					if (attachments != undefined && attachments["control_points"] != undefined) {
@@ -95,7 +100,7 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 						}
 					}
 
-					this.particle_infos[asset["modifier"]] = {
+					this.particle_infos[particle_name] = {
 						"pattach": attachments != undefined ? ATTACH_TYPES[attachments!["attach_type"]] : ParticleAttachment.ABSORIGIN_FOLLOW,
 						"control_points": control_points
 					};

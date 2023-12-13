@@ -7,9 +7,10 @@ import { modifier_cosmetic_model_ts } from "./modifier_cosmetic_model";
 
 @registerModifier()
 export class modifier_cosmetic_ts extends ModifierCosmeticBase {
-	hEntity? : CDOTA_BaseNPC;
-	hEntityModifier? : ModifierCosmeticBase;
-	particle_replacements : ParticleReplacements = {};
+	hEntity?: CDOTA_BaseNPC;
+	hEntityModifier?: ModifierCosmeticBase;
+	particle_replacements: ParticleReplacements = {};
+	persona?: number;
 
 	GetAttributes(): ModifierAttribute {
 		return ModifierAttribute.PERMANENT + ModifierAttribute.MULTIPLE;
@@ -73,6 +74,8 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 					this.model_skin = asset["skin"];
 				} else if (asset["type"] == "healthbar_offset") {
 					this.healthbar_offset = asset["offset"];
+				} else if (asset["type"] == "persona") {
+					this.persona = asset["persona"];
 				} else if (asset["type"] == "particle") {
 					const [original_particle, modified_particle] = [asset["asset"], asset["modifier"]];
 					if (original_particle != undefined && modified_particle != undefined) {

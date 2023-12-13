@@ -319,10 +319,11 @@ export class Cosmetic {
 		if (item == undefined) {
 			return false;
 		}
-		const hero = PlayerResource.GetSelectedHeroEntity(playerID)
+		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
 		if (!IsValidEntity(hero)) {
 			return false;
 		}
+		const heroname = hero.GetUnitName();
 		const modifier_data = {"item_id": item_id, "model": item.model, "style": style, "name": item.name};
 		let modifier = this.GetModifierForSlot(hero, item.slot);
 		if (modifier != undefined) {
@@ -338,6 +339,28 @@ export class Cosmetic {
 		}
 		modifier.ReadVisuals(item.visuals);
 		modifier.ApplyVisuals();
+		const current_persona = this.GetCurrentPersona(playerID);
+		for (const slot of Object.keys(this.hero_items[hero.GetUnitName()])) {
+			const mod = this.GetModifierForSlot(hero, slot);
+			if (mod != undefined && mod.persona != undefined) {
+				continue;
+			}
+			print(slot)
+			if (this.GetPersonaForSlot(slot) != current_persona) {
+				if (mod != undefined) {
+					mod.Destroy();
+				}
+			} else {
+				if (mod == undefined) {
+					const {item, style} = this.equipped_items[playerID] != undefined && this.equipped_items[playerID][heroname] != undefined ? this.equipped_items[playerID][heroname][slot] : {item: undefined, style: undefined};
+					if (item != undefined) {
+						this._EquipItem(playerID, item, style ?? 1, true);
+					} else {
+						this.DefaultSlot(playerID, slot, true);
+					}
+				}
+			}
+		}
 		// if (!ignore_default_check) {
 		// 	const default_equipped = item["type"] == "default_item";
 		// 	if (default_equipped) {
@@ -359,16 +382,22 @@ export class Cosmetic {
 		return true;
 	}
 
-	public GetModifierForSlot(hero: CDOTA_BaseNPC, slot: string) : modifier_cosmetic_ts | undefined {
+	public GetModifiersAndSlots(hero: CDOTA_BaseNPC) : {[slot : string] : modifier_cosmetic_ts} {
+		const slots : {[slot : string] : modifier_cosmetic_ts} = {};
 		for (const mod of hero.FindAllModifiersByName(modifier_cosmetic_ts.name)) {
 			const modifier = mod as modifier_cosmetic_ts;
-			if (modifier.kv != undefined && modifier.kv.item_id != undefined) {
+			if (!modifier.IsNull() && modifier.kv != undefined && modifier.kv.item_id != undefined) {
 				const item = this.items[modifier.kv.item_id] as Item;
-				if (item != undefined && item.slot == slot) {
-					return modifier;
+				if (item != undefined && item.slot != undefined) {
+					slots[item.slot] = modifier;
 				}
 			}
 		}
+		return slots;
+	}
+
+	public GetModifierForSlot(hero: CDOTA_BaseNPC, slot: string) : modifier_cosmetic_ts | undefined {
+		return this.GetModifiersAndSlots(hero)[slot];
 	}
 
 	public RemoveSlot(playerID: PlayerID, slot: string): void {
@@ -520,5 +549,21 @@ export class Cosmetic {
 			Object.assign(replacements, modifier.particle_replacements);
 		}
 		return replacements;
+	}
+
+	public GetPersonaForSlot(slot: string): number | undefined {
+		const persona = string.match(slot, "_persona_(%d+)")[0];
+		return persona != undefined ? parseInt(persona) : undefined
+	}
+
+	public GetCurrentPersona(playerID: PlayerID): number | undefined {
+		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
+		if (!IsValidEntity(hero)) {
+			return;
+		}
+		const modifier = this.GetModifierForSlot(hero, "persona_selector");
+		if (modifier != undefined) {
+			return modifier.persona;
+		}
 	}
 }
