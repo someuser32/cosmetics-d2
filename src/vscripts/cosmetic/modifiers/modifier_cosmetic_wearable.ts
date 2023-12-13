@@ -1,6 +1,6 @@
 import { GetAttribute } from "../../lib/client";
 import { registerModifier } from "../../lib/dota_ts_adapter";
-import { ATTACH_TYPES, SpecialBehavior, SpecialBehaviorInfo, SpecialBehaviorModelInfo } from "../cosmetic";
+import { ATTACH_TYPES } from "../vars";
 import { ModifierCosmeticBase, params } from "./modifier_cosmetic_base";
 
 
@@ -185,7 +185,6 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 
 		for (const [particle_name, particle_info] of Object.entries(this.particle_infos)) {
 			const fx = ParticleManager.CreateParticle(particle_name, particle_info["pattach"], this.parent);
-			print("Creating", particle_name, this.special_style)
 			for (const [control_point, control_point_info] of Object.entries(particle_info["control_points"])) {
 				ParticleManager.SetParticleControlEnt(fx, parseInt(control_point), this.parent, control_point_info["pattach"], control_point_info["attach"], this.parent.GetAbsOrigin(), true);
 			}

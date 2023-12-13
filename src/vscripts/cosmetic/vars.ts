@@ -1,0 +1,17 @@
+export const ATTACH_TYPES : {[attach_name : string] : ParticleAttachment} = {
+	["absorigin"]: ParticleAttachment.ABSORIGIN,
+	["absorigin_follow"]: ParticleAttachment.ABSORIGIN_FOLLOW,
+	["customorigin"]: ParticleAttachment.CUSTOMORIGIN,
+	["customorigin_follow"]: ParticleAttachment.CUSTOMORIGIN_FOLLOW,
+	["EYES_FOLLOW"]: ParticleAttachment.EYES_FOLLOW,
+	["point_follow"]: ParticleAttachment.POINT_FOLLOW,
+	["renderorigin_follow"]: ParticleAttachment.RENDERORIGIN_FOLLOW,
+	["worldorigin"]: ParticleAttachment.WORLDORIGIN,
+	["CENTER_FOLLOW"]: ParticleAttachment.CENTER_FOLLOW,
+	["CUSTOM_GAME_STATE_1"]: ParticleAttachment.CUSTOM_GAME_STATE_1,
+	["MAIN_VIEW"]: ParticleAttachment.MAIN_VIEW,
+	["OVERHEAD_FOLLOW"]: ParticleAttachment.OVERHEAD_FOLLOW,
+	["POINT"]: ParticleAttachment.POINT,
+	["ROOTBONE_FOLLOW"]: ParticleAttachment.ROOTBONE_FOLLOW,
+	["WATERWAKE"]: ParticleAttachment.WATERWAKE,
+}

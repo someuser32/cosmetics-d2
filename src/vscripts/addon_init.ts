@@ -9,4 +9,4 @@ import "./lib/client";
 import { CosmeticModifier } from "./cosmetic/modifiers/basemodifier";
 
 
-export declare class BaseModifier extends CosmeticModifier {};
+export class BaseModifier extends CosmeticModifier {};

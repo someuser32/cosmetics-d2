@@ -1,6 +1,5 @@
 import { GetAttribute } from "../../lib/client";
 import { BaseModifier } from "../../addon_init";
-import { Item, SpecialBehavior, SpecialBehaviorInfo, SpecialBehaviorModelInfo } from "../cosmetic";
 
 import { modifier_cosmetic_model_ts } from "./modifier_cosmetic_model";
 

@@ -1,6 +1,7 @@
 import "../lib/kvparser/kvparser";
 import { reloadable } from "../lib/tstl-utils";
 import { GetAttribute, MathUtils, ObjectUtils, SetAttribute } from "../lib/client";
+import { ATTACH_TYPES } from "./vars";
 
 import { modifier_cosmetic_ts } from "./modifiers/modifier_cosmetic";
 import { modifier_cosmetic_wearable_ts } from "./modifiers/modifier_cosmetic_wearable";
@@ -16,121 +17,6 @@ declare global {
 	}
 }
 
-export const ATTACH_TYPES : {[attach_name : string] : ParticleAttachment} = {
-	["absorigin"]: ParticleAttachment.ABSORIGIN,
-	["absorigin_follow"]: ParticleAttachment.ABSORIGIN_FOLLOW,
-	["customorigin"]: ParticleAttachment.CUSTOMORIGIN,
-	["customorigin_follow"]: ParticleAttachment.CUSTOMORIGIN_FOLLOW,
-	["EYES_FOLLOW"]: ParticleAttachment.EYES_FOLLOW,
-	["point_follow"]: ParticleAttachment.POINT_FOLLOW,
-	["renderorigin_follow"]: ParticleAttachment.RENDERORIGIN_FOLLOW,
-	["worldorigin"]: ParticleAttachment.WORLDORIGIN,
-	["CENTER_FOLLOW"]: ParticleAttachment.CENTER_FOLLOW,
-	["CUSTOM_GAME_STATE_1"]: ParticleAttachment.CUSTOM_GAME_STATE_1,
-	["MAIN_VIEW"]: ParticleAttachment.MAIN_VIEW,
-	["OVERHEAD_FOLLOW"]: ParticleAttachment.OVERHEAD_FOLLOW,
-	["POINT"]: ParticleAttachment.POINT,
-	["ROOTBONE_FOLLOW"]: ParticleAttachment.ROOTBONE_FOLLOW,
-	["WATERWAKE"]: ParticleAttachment.WATERWAKE,
-}
-
-interface Slots {
-	[heroname : string] : {
-		slots : CosmeticSlots,
-		model_scale : number
-	}
-}
-
-interface BaseItem {
-	name : string,
-	slot : string,
-	icon : string,
-	heroes : string[],
-	rarity : string,
-	styles : number,
-	type : string,
-}
-
-export interface Item extends BaseItem {
-	model : string,
-	visuals : {
-		[asset_modifier : string] : any
-	}
-}
-
-export interface Bundle extends BaseItem {
-	bundle : string[] | number[]
-}
-
-interface Items {
-	[item_id : number] : Item | Bundle
-}
-
-interface HeroItems {
-	[heroname : string] : {
-		[slotname : string] : Items
-	}
-}
-
-interface PlayersEquippedItems {
-	[playerID : number] : {
-		[heroname : string] : CosmeticEquippedItems
-	}
-}
-
-interface DOTAEquippedItems {
-	[slot : string] : number
-}
-
-export interface SpecialBehaviorParticleControlPoint {
-	pattach? : string,
-	attach? : string
-}
-
-export interface SpecialBehaviorParticleInfo {
-	pattach? : string,
-	control_points? : {
-		[control_point : string] : SpecialBehaviorParticleControlPoint
-	},
-	create_on_equip?: boolean
-}
-
-export interface SpecialBehaviorModelInfo {
-	bodygroups? : {
-		[group : string] : number
-	},
-	skin? : number,
-	materialgroup?: string
-}
-
-export interface SpecialBehaviorInfo {
-	particles? : {
-		[particle_name : string] : SpecialBehaviorParticleInfo | "destroy"
-	},
-	player? : SpecialBehaviorModelInfo,
-	wearable? : SpecialBehaviorModelInfo
-}
-
-export interface SpecialBehavior extends SpecialBehaviorInfo {
-	styles? : {
-		[style : string] : SpecialBehaviorInfo
-	},
-	parent_style? : number
-}
-
-interface BehaviorsJSON {
-	[name : string] : SpecialBehavior
-}
-
-export interface ParticleReplacements {
-	[particle_name : string] : {
-		name? : string,
-		pattach? : ParticleAttachment,
-		control_points? : {
-			[control_point : string] : SpecialBehaviorParticleControlPoint
-		},
-	}
-}
 
 @reloadable
 export class Cosmetic {
@@ -171,7 +57,7 @@ export class Cosmetic {
 					partileAttach = particleReplacement[particleName]["pattach"]!;
 				}
 			}
-			const fx = valve_create_particle(particleName, partileAttach, owner);
+			const fx = valve_create_particle.bind(this)(particleName, partileAttach, owner);
 			// if (playerOwnerID != -1) {
 			// 	GameRules.Cosmetic.particle_owners[fx] = [particleName, playerOwnerID];
 			// }

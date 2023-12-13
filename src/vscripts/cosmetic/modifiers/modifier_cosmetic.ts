@@ -3,7 +3,6 @@ import { ModifierCosmeticBase, params } from "./modifier_cosmetic_base";
 
 import { modifier_cosmetic_wearable_ts } from "./modifier_cosmetic_wearable";
 import { modifier_cosmetic_model_ts } from "./modifier_cosmetic_model";
-import { SpecialBehavior, SpecialBehaviorInfo, SpecialBehaviorModelInfo, ParticleReplacements } from "../cosmetic";
 
 
 @registerModifier()
