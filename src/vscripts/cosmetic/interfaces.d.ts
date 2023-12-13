@@ -48,7 +48,8 @@ interface HeroItems {
 
 interface SpecialBehaviorParticleControlPoint {
 	pattach? : string,
-	attach? : string
+	attach? : string,
+	vector? : string | [number, number, number]
 }
 
 interface SpecialBehaviorParticleInfo {

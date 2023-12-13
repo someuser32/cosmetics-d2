@@ -2,7 +2,6 @@ import { registerModifier } from "../../lib/dota_ts_adapter";
 import { ModifierCosmeticBase, params } from "./modifier_cosmetic_base";
 
 import { modifier_cosmetic_wearable_ts } from "./modifier_cosmetic_wearable";
-import { modifier_cosmetic_model_ts } from "./modifier_cosmetic_model";
 
 
 @registerModifier()
@@ -10,6 +9,7 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 	hEntity?: CDOTA_BaseNPC;
 	hEntityModifier?: ModifierCosmeticBase;
 	particle_replacements: ParticleReplacements = {};
+	ranged_projectile?: string;
 	persona?: number;
 
 	GetAttributes(): ModifierAttribute {
@@ -74,12 +74,19 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 					this.model_skin = asset["skin"];
 				} else if (asset["type"] == "healthbar_offset") {
 					this.healthbar_offset = asset["offset"];
+				} else if (asset["type"] == "activity") {
+					if (asset["asset"] == "ALL") {
+						this.activity = asset["modifier"];
+					}
 				} else if (asset["type"] == "persona") {
 					this.persona = asset["persona"];
 				} else if (asset["type"] == "particle") {
 					const [original_particle, modified_particle] = [asset["asset"], asset["modifier"]];
 					if (original_particle != undefined && modified_particle != undefined) {
 						this.particle_replacements[original_particle] = {"name": modified_particle};
+						if (original_particle == this.parent.GetRangedProjectileName()) {
+							this.ranged_projectile = modified_particle;
+						}
 					}
 				}
 			}

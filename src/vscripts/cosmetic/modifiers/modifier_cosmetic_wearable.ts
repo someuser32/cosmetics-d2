@@ -9,7 +9,8 @@ interface ParticleInfo {
 	control_points : {
 		[control_point : number] : {
 			pattach : ParticleAttachment,
-			attach : string
+			attach : string,
+			vector? : string | [number, number, number]
 		}
 	}
 }
@@ -134,7 +135,8 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 							for (const [control_point, control_point_info] of Object.entries(particle_info["control_points"])) {
 								control_points[parseInt(control_point)] = {
 									"pattach": ATTACH_TYPES[control_point_info["pattach"] ?? ""] ?? ParticleAttachment.ABSORIGIN_FOLLOW,
-									"attach": control_point_info["attach"] ?? "attach_hitloc"
+									"attach": control_point_info["attach"] ?? "attach_hitloc",
+									"vector": control_point_info["vector"] ?? "parent"
 								};
 							}
 						}
@@ -187,11 +189,19 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 				this.parent.SetBodygroupByName(bodygroup, value);
 			}
 		}
-
 		for (const [particle_name, particle_info] of Object.entries(this.particle_infos)) {
 			const fx = ParticleManager.CreateParticle(particle_name, particle_info["pattach"], this.parent);
 			for (const [control_point, control_point_info] of Object.entries(particle_info["control_points"])) {
-				ParticleManager.SetParticleControlEnt(fx, parseInt(control_point), this.parent, control_point_info["pattach"], control_point_info["attach"], this.parent.GetAbsOrigin(), true);
+				let vector = this.parent.GetAbsOrigin();
+				if (control_point_info["vector"] != undefined) {
+					if (typeof control_point_info["vector"] == "object") {
+						vector = Vector(...control_point_info["vector"])
+					} else if (control_point_info["vector"] == "parent") {
+						vector = this.parent.GetAbsOrigin();
+					}
+				}
+				ParticleManager.SetParticleControlEnt(fx, parseInt(control_point), this.parent, control_point_info["pattach"], control_point_info["attach"], vector, true);
+				print(control_point, control_point_info["pattach"], control_point_info["attach"], vector)
 			}
 			this.particles[particle_name] = fx;
 		}

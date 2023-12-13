@@ -2,6 +2,7 @@ import { GetAttribute } from "../../lib/client";
 import { BaseModifier } from "../../addon_init";
 
 import { modifier_cosmetic_model_ts } from "./modifier_cosmetic_model";
+import { modifier_cosmetic_activity_ts } from "./modifier_cosmetic_activity";
 
 export declare type params = {
 	style : number | undefined,
@@ -27,6 +28,7 @@ export class ModifierCosmeticBase extends BaseModifier {
 	model? : string;
 	model_skin? : number;
 	model_bodygroups : SpecialBehaviorModelInfo["bodygroups"] = {};
+	activity? : string;
 	healthbar_offset? : number;
 	unit_models : UnitModels = {};
 
@@ -142,6 +144,13 @@ export class ModifierCosmeticBase extends BaseModifier {
 			for (const [bodygroup, value] of Object.entries(model_bodygroups)) {
 				this.parent.SetBodygroupByName(bodygroup, value);
 			}
+		}
+
+		const activity : string | undefined = this.GetSharedValue("activity");
+		if (activity != undefined) {
+			modifier_cosmetic_activity_ts.apply(this.parent, this.parent, undefined, {"activity": activity});
+		} else {
+			this.parent.RemoveModifierByName(modifier_cosmetic_activity_ts.name);
 		}
 	}
 

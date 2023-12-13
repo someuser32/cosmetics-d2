@@ -8,11 +8,11 @@ import { modifier_cosmetic_wearable_ts } from "./modifiers/modifier_cosmetic_wea
 import { modifier_cosmetic_model_ts } from "./modifiers/modifier_cosmetic_model";
 
 const ITEMS_GAME_URL = "https://raw.githubusercontent.com/spirit-bear-productions/dota_vpk_updates/main/scripts/items/items_game.txt";
-// const BEHAViORS_JSON_URL = "https://pastebin.com/raw/3URRriEz";
-const BEHAViORS_JSON_URL = "http://localhost:8000/behaviors.json";
+// const BEHAVIORS_JSON_URL = "https://pastebin.com/raw/3URRriEz";
+const BEHAVIORS_JSON_URL = "http://127.0.0.1:8000/behaviors.json";
 
 declare global {
-	interface ParticleManager {
+	interface CScriptParticleManager {
 		CreateParticle(particleName: string, particleAttach: ParticleAttachment, owner: CBaseEntity | undefined, source?: PlayerID) : ParticleID
 	}
 }
@@ -64,7 +64,15 @@ export class Cosmetic {
 			if (particleReplacement[particleName] != undefined && owner != undefined) {
 				if (particleReplacement[particleName]["control_points"] != undefined) {
 					for (const [control_point_index, control_point] of Object.entries(particleReplacement[particleName]["control_points"]!)) {
-						ParticleManager.SetParticleControlEnt(fx, parseInt(control_point_index), owner, ATTACH_TYPES[control_point["pattach"] ?? ""] ?? ParticleAttachment.ABSORIGIN_FOLLOW, control_point["attach"] ?? "attach_hitloc", owner?.GetAbsOrigin(), true);
+						let vector = owner.GetAbsOrigin();
+						if (control_point["vector"] != undefined) {
+							if (typeof control_point["vector"] == "object") {
+								vector = Vector(...control_point["vector"])
+							} else if (control_point["vector"] == "parent") {
+								vector = owner.GetAbsOrigin();
+							}
+						}
+						ParticleManager.SetParticleControlEnt(fx, parseInt(control_point_index), owner, ATTACH_TYPES[control_point["pattach"] ?? ""] ?? ParticleAttachment.ABSORIGIN_FOLLOW, control_point["attach"] ?? "attach_hitloc", vector, true);
 					}
 				}
 			}
@@ -73,7 +81,7 @@ export class Cosmetic {
 	}
 
 	public PostInit(): void {
-		this.InitSlots();
+		// this.InitSlots();
 		this.InitItems();
 		this.InitParticles();
 	}
@@ -129,7 +137,7 @@ export class Cosmetic {
 
 		this.behaviors_json = {} as BehaviorsJSON;
 
-		const r = CreateHTTPRequestScriptVM("GET", BEHAViORS_JSON_URL);
+		const r = CreateHTTPRequestScriptVM("GET", BEHAVIORS_JSON_URL);
 
 		const _this = this;
 
@@ -345,7 +353,6 @@ export class Cosmetic {
 			if (mod != undefined && mod.persona != undefined) {
 				continue;
 			}
-			print(slot)
 			if (this.GetPersonaForSlot(slot) != current_persona) {
 				if (mod != undefined) {
 					mod.Destroy();
