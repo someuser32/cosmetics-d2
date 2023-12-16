@@ -196,6 +196,17 @@
 							"number" "1"
 						}
 						"___$$$regex" "(\d+)|(asset_modifier)"
+						"loadout_hero_offsets"
+						{
+							"loadout_hero_offset"
+							{
+								"___$$$types"
+								{
+									"string" "1"
+								}
+								"___$$$regex" ".+"
+							}
+						}
 					}
 				}
 			}
@@ -424,7 +435,7 @@
 	}
 	"item_sets"
 	{
-		"item_name"
+		"item_set_name"
 		{
 			"___$$$types"
 			{

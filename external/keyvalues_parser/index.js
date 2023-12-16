@@ -24,7 +24,7 @@ function isObject(item) {
 /**
  * Deep merge two objects and array contents.
  * @param {Object} target
- * @param {Object} sources
+ * @param {Object} source
  * @returns {Object}
  */
 function mergeDeep(target, source) {
@@ -33,11 +33,7 @@ function mergeDeep(target, source) {
 	if (isObject(target) && isObject(source)) {
 		Object.keys(source).forEach(key => {
 			if (isObject(source[key]) && Array.isArray(output[key])) {
-				const temp = output[key].slice();
-				if (!isObject(output[key])) {
-					output[key] = Object.assign({ "___$$$array": [] }, source[key]);
-				}
-				output[key]["___$$$array"].push(...temp);
+				output[key] = Object.assign({"___$$$array": output[key]}, source[key]);
 			} else if (Array.isArray(source[key]) && isObject(output[key])) {
 				if (output[key]["___$$$array"] == undefined) {
 					output[key]["___$$$array"] = [];
@@ -361,7 +357,7 @@ function generateTypeScriptInterface(obj, indent=1) {
 		interfaceString += '\t'.repeat(indent);
 		const optionalSyntax = obj[key]["___$$$kv_parser_maybe_undefined"] === 1 || (Array.isArray(obj[key]) && obj[key].includes("undefined")) ? '?' : '';
 		const types = convertValue(obj[key]).split(" | ").filter((v, i, a) => v != "undefined").join(" | ");
-		const keyname = (!key.startsWith("[") && key.indexOf(" ") !== -1) || ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].some((char, i, a) => (key.startsWith(char))) || ["/", "'"].some((char, i, a) => (key.indexOf(char) !== -1)) ? `"${key}"` : key;
+		const keyname = (!key.startsWith("[") && !key.endsWith("]") && key.indexOf(" ") !== -1) || ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].some((char, i, a) => (key.startsWith(char))) || ["/", "'"].some((char, i, a) => (key.indexOf(char) !== -1)) ? `"${key}"` : key;
 		const use_optional = !keyname.endsWith("]");
 		interfaceString += `${keyname}${use_optional ? optionalSyntax : ""}: ${types}${!use_optional && optionalSyntax == "?" ? " | undefined" : ""},\n`;
 	}

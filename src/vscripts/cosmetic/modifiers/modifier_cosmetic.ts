@@ -7,7 +7,7 @@ import { modifier_cosmetic_wearable_ts } from "./modifier_cosmetic_wearable";
 @registerModifier()
 export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 	hEntity?: CDOTA_BaseNPC;
-	hEntityModifier?: ModifierCosmeticBase;
+	hEntityModifier?: modifier_cosmetic_wearable_ts;
 	particle_replacements: ParticleReplacements = {};
 	ranged_projectile?: string;
 	persona?: number;
@@ -51,7 +51,7 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 		return modifier_cosmetic_ts.apply(hero, hero, undefined, this.kv);
 	}
 
-	ReadAsset(asset_name: string, asset: any, array?: ItemsGameItemAssetModifier[]): void {
+	ReadAsset(asset_name: string, asset: any, array?: ItemsGameItem["visuals"][]): void {
 		if (typeof(asset) == "object") {
 			if (array != undefined && asset["style"] == this.style) {
 				array.push({[asset_name]: asset});
@@ -93,7 +93,7 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 		}
 	}
 
-	ReadVisuals(visuals: ItemsGameItemAssetModifier): void {
+	ReadVisuals(visuals: ItemsGameItem["visuals"]): void {
 		super.ReadVisuals(visuals);
 
 		this.hEntityModifier!.ReadVisuals(visuals);

@@ -63,17 +63,17 @@ export class ModifierCosmeticBase extends BaseModifier {
 		this.style = kv.style ?? this.style;
 	}
 
-	ReadAsset(asset_name: string, asset: any, array?: ItemsGameItemAssetModifier[]): void {
+	ReadAsset(asset_name: string, asset: any, array?: ItemsGameItem["visuals"][]): void {
 	}
 
-	ReadVisuals(visuals: ItemsGameItemAssetModifier): void {
-		const styled_assets : ItemsGameItemAssetModifier[] = [];
+	ReadVisuals(visuals: ItemsGameItem["visuals"]={}): void {
+		const styled_assets : ItemsGameItem["visuals"][] = [];
 		for (const [asset_name, asset] of Object.entries(visuals)) {
 			this.ReadAsset(asset_name, asset, styled_assets);
 		}
 
 		for (const styled_asset of styled_assets) {
-			for (const [asset_name, asset] of Object.entries(styled_asset)) {
+			for (const [asset_name, asset] of Object.entries(styled_asset!)) {
 				this.ReadAsset(asset_name, asset);
 			}
 		}

@@ -72,7 +72,7 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 		}
 	}
 
-	ReadAsset(asset_name: string, asset: any, array?: ItemsGameItemAssetModifier[]): void {
+	ReadAsset(asset_name: string, asset: any, array?: ItemsGameItem["visuals"][]): void {
 		if (typeof(asset) == "object") {
 			if (array != undefined && asset["style"] == this.style) {
 				array.push({[asset_name]: asset});
@@ -102,7 +102,7 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 					}
 
 					this.particle_infos[particle_name] = {
-						"pattach": attachments != undefined ? ATTACH_TYPES[attachments!["attach_type"]] : ParticleAttachment.ABSORIGIN_FOLLOW,
+						"pattach": attachments != undefined ? ATTACH_TYPES[attachments["attach_type"]!] : ParticleAttachment.ABSORIGIN_FOLLOW,
 						"control_points": control_points
 					};
 				}
