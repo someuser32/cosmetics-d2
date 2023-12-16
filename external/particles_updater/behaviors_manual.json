@@ -9,6 +9,7 @@
 						"attach": "attach_hitloc"
 					}
 				},
+				"owner": "self",
 				"create_on_equip": true
 			}
 		},
@@ -30,18 +31,6 @@
 			"-1": {}
 		},
 		"parent_style": -1
-	},
-	"7": {
-		"particles": {
-			"particles/units/heroes/hero_juggernaut/juggernaut_blade_generic.vpcf": {
-				"control_points": {
-					"0": {
-						"pattach": "point_follow",
-						"attach": "blade_attachment"
-					}
-				}
-			}
-		}
 	},
 	"9662": {
 		"styles": {
@@ -113,5 +102,18 @@
 			}
 		},
 		"parent_style": 9662
+	},
+	"6879": {
+		"particles": {
+			"particles/econ/items/techies/techies_arcana/techies_ambient_arcana.vpcf": {
+				"control_points": {
+					"0": {
+						"pattach": "point_follow",
+						"attach": "attach_attack4",
+						"owner": "parent"
+					}
+				}
+			}
+		}
 	}
 }

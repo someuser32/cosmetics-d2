@@ -33,7 +33,7 @@ const ATTACH_TYPES = {
 	"PATTACH_POINT": "POINT",
 	"PATTACH_ROOTBONE_FOLLOW": "ROOTBONE_FOLLOW",
 	"PATTACH_WATERWAKE": "WATERWAKE"
-}
+};
 
 const not_existing_particles = [];
 const non_configurable_particles = [];
@@ -185,6 +185,7 @@ async function GetParticleInfo(particle_name, dota2path, particle_type) {
 						attachtype = "absorigin_follow";
 					};
 					const attachname = cp["m_attachmentName"];
+					const owner = cp["m_entityName"];
 					if ((index == 0 && attachtype == "absorigin_follow") || (particle_type == "particle" && attachtype == "worldorigin")) {
 						continue;
 					};
@@ -194,6 +195,9 @@ async function GetParticleInfo(particle_name, dota2path, particle_type) {
 					particle_info["control_points"][index] = {"pattach": attachtype};
 					if (attachname != undefined) {
 						particle_info["control_points"][index]["attach"] = attachname;
+					};
+					if (owner != undefined) {
+						particle_info["control_points"][index]["owner"] = owner ?? "self";
 					};
 				};
 			};

@@ -10,9 +10,11 @@ interface ParticleInfo {
 		[control_point : number] : {
 			pattach : ParticleAttachment,
 			attach : string,
-			vector? : string | [number, number, number]
+			vector? : string | [number, number, number],
+			owner : string
 		}
-	}
+	},
+	owner : string
 }
 
 @registerModifier()
@@ -96,14 +98,16 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 							const index : number = cp_info["control_point_index"] as number;
 							control_points[index] = {
 								"pattach": ATTACH_TYPES[cp_info["attach_type"]],
-								"attach": cp_info["attachment"] ?? "attach_hitloc"
+								"attach": cp_info["attachment"] ?? "attach_hitloc",
+								"owner": cp_info["attach_entity"] ?? (attachments != undefined && attachments["attach_entity"] != undefined ? attachments["attach_entity"] : "self")
 							};
 						}
 					}
 
 					this.particle_infos[particle_name] = {
 						"pattach": attachments != undefined ? ATTACH_TYPES[attachments["attach_type"]!] : ParticleAttachment.ABSORIGIN_FOLLOW,
-						"control_points": control_points
+						"control_points": control_points,
+						"owner": attachments != undefined && attachments["attach_entity"] != undefined ? attachments["attach_entity"] : "self"
 					};
 				}
 			}
@@ -136,7 +140,8 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 								control_points[parseInt(control_point)] = {
 									"pattach": ATTACH_TYPES[control_point_info["pattach"] ?? ""] ?? ParticleAttachment.ABSORIGIN_FOLLOW,
 									"attach": control_point_info["attach"] ?? "attach_hitloc",
-									"vector": control_point_info["vector"] ?? "parent"
+									"vector": control_point_info["vector"] ?? "parent",
+									"owner": control_point_info["owner"] ?? "self"
 								};
 							}
 						}
@@ -144,11 +149,15 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 						if (this.particles[particle_name] == undefined) {
 							this.particle_infos[particle_name] = {
 								"pattach": pattach ?? ParticleAttachment.ABSORIGIN_FOLLOW,
-								"control_points": control_points
+								"control_points": control_points,
+								"owner": particle_info["owner"] ?? "self"
 							}
 						} else {
 							if (pattach != undefined) {
 								this.particle_infos[particle_name]["pattach"] = pattach;
+							}
+							if (particle_info["owner"] != undefined) {
+								this.particle_infos[particle_name]["owner"] = particle_info["owner"];
 							}
 							this.particle_infos[particle_name]["control_points"] = Object.assign(this.particle_infos[particle_name]["control_points"], control_points);
 						}
@@ -190,18 +199,21 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 			}
 		}
 		for (const [particle_name, particle_info] of Object.entries(this.particle_infos)) {
-			const fx = ParticleManager.CreateParticle(particle_name, particle_info["pattach"], this.parent);
+			const owner = particle_info["owner"] == "parent" ? this.caster : this.parent;
+			const fx = ParticleManager.CreateParticle(particle_name, particle_info["pattach"], owner);
 			for (const [control_point, control_point_info] of Object.entries(particle_info["control_points"])) {
-				let vector = this.parent.GetAbsOrigin();
+				let vector = owner.GetAbsOrigin();
 				if (control_point_info["vector"] != undefined) {
 					if (typeof control_point_info["vector"] == "object") {
 						vector = Vector(...control_point_info["vector"])
 					} else if (control_point_info["vector"] == "parent") {
-						vector = this.parent.GetAbsOrigin();
+						vector = owner.GetAbsOrigin();
 					}
 				}
-				ParticleManager.SetParticleControlEnt(fx, parseInt(control_point), this.parent, control_point_info["pattach"], control_point_info["attach"], vector, true);
+				const cp_owner = control_point_info["owner"] == "parent" ? this.caster : this.parent;
+				ParticleManager.SetParticleControlEnt(fx, parseInt(control_point), cp_owner, control_point_info["pattach"], control_point_info["attach"], vector, true);
 			}
+			DeepPrintTable(particle_info)
 			this.particles[particle_name] = fx;
 		}
 	}

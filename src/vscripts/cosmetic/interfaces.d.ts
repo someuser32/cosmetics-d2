@@ -49,7 +49,8 @@ interface HeroItems {
 interface SpecialBehaviorParticleControlPoint {
 	pattach? : string,
 	attach? : string,
-	vector? : string | [number, number, number]
+	vector? : string | [number, number, number],
+	owner? : string
 }
 
 interface SpecialBehaviorParticleInfo {
@@ -57,7 +58,8 @@ interface SpecialBehaviorParticleInfo {
 	control_points? : {
 		[control_point : string] : SpecialBehaviorParticleControlPoint
 	},
-	create_on_equip?: boolean
+	create_on_equip?: boolean,
+	owner? : string
 }
 
 interface SpecialBehaviorModelInfo {

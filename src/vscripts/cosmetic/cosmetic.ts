@@ -78,10 +78,12 @@ export class Cosmetic {
 			}
 			return fx;
 		}
+
+		const valve_emitsound = CBaseEntity.EmitSound
 	}
 
 	public PostInit(): void {
-		this.InitSlots();
+		// this.InitSlots();
 		this.InitItems();
 		this.InitParticles();
 	}
