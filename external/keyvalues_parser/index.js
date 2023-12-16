@@ -5,8 +5,10 @@ import {parse} from "kvparser";
 import rdiff from "recursive-diff";
 const {getDiff} = rdiff;
 import * as fs from "node:fs";
-import * as util from "node:util";
 import path from "path";
+
+
+const FILENAME = "items_game.txt";
 
 
 /**
@@ -34,7 +36,7 @@ function mergeDeep(target, source) {
 				} else {
 					output[key] = mergeDeep(target[key], source[key]);
 				}
-			} else if (Array.isArray(source[key])) {
+			} else if (Array.isArray(source[key]) && (Array.isArray(output[key]) || target[key] == undefined)) {
 				if (target[key] == undefined) {
 					Object.assign(output, {[key]: source[key]});
 				} else {
@@ -155,6 +157,14 @@ async function GetFile(filepath, state) {
 	return fs.readFileSync(filepath);
 }
 
+/**
+ * @param {string} filepath
+ * @returns {string?}
+ */
+async function SaveFile(filepath) {
+	return fs.writeFileSync(path.parse(filepath).name, await GetFile(filepath));
+}
+
 
 /**
  * @param {any} value
@@ -192,10 +202,11 @@ function MakeTypesArrayUnique(kv_types) {
  * @returns {Object}
  */
 function ParseKeyValues(kv, kv_types, parent_obj) {
+	console.log("parsing", kv.Key)
 	const kv_interface = {};
+	const [group_name, group_type] = GetGroupForKV(kv, kv_types);
+	const keyname = group_name != undefined ? `[${group_name}: ${group_type}]` : kv.Key
 	if (kv.HasChildren()) {
-		const [group_name, group_type] = GetGroupForKV(kv, kv_types);
-		const keyname = group_name != undefined ? `[${group_name}: ${group_type}]` : kv.Key
 		const parsed_kv = {};
 		let new_interface = undefined;
 		for (const kv_child of kv.GetChildren()) {
@@ -224,7 +235,16 @@ function ParseKeyValues(kv, kv_types, parent_obj) {
 		if (kv_interface[keyname] == undefined) {
 			kv_interface[keyname] = {};
 		}
-		if (group_name != undefined && parent_obj != undefined) {
+		if (parent_obj != undefined) {
+			if (parent_obj[keyname] != undefined) {
+				for (const key of Object.keys(parent_obj[keyname])) {
+					if (parsed_kv[keyname][key] == undefined) {
+						if (Array.isArray(parent_obj[keyname][key]) && !parent_obj[keyname][key].includes("undefined")) {
+							parent_obj[keyname][key].push("undefined");
+						}
+					}
+				}
+			}
 			const difference = getDiff(parent_obj, parsed_kv);
 			for (const diff of difference) {
 				if (["add", "delete"].includes(diff["op"])) {
@@ -243,29 +263,19 @@ function ParseKeyValues(kv, kv_types, parent_obj) {
 			}
 		}
 		kv_interface[keyname] = mergeDeep(kv_interface[keyname], new_interface);
-		// for (const key of Object.keys(kv_interface[keyname])) {
-		// 	if (!parsed_keys.includes(key)) {
-		// 		if (Array.isArray(kv_interface[keyname][key]) && !kv_interface[keyname][key].includes(undefined)) {
-		// 			kv_interface[keyname][key].push(undefined);
-		// 		} else if (kv_interface[keyname][key]["___$$$kv_parser_maybe_undefined"] == undefined) {
-		// 			kv_interface[keyname][key]["___$$$kv_parser_maybe_undefined"] = 1;
-		// 		}
-		// 	}
-		// }
 	} else {
 		const type = GetValueType(kv.value);
-		kv_interface[kv.Key] = [type];
+		kv_interface[keyname] = [type];
 	}
 	return kv_interface;
 }
 
 /**
  * @param {KeyValues} kv
- * @param {KeyValues} kv_types
- * @returns {Array<string, string>}
+ * @returns {Array<string>}
  */
-function GetGroupForKV(kv, kv_types) {
-	let kv_path = [];
+function GetKVPath(kv) {
+	const kv_path = [];
 	let parent = kv.GetParent();
 	while (parent != undefined) {
 		if (parent.Key == "__KeyValues_Root__") {
@@ -274,31 +284,88 @@ function GetGroupForKV(kv, kv_types) {
 		kv_path.unshift(parent.Key);
 		parent = parent.GetParent();
 	}
+	return kv_path;
+}
+
+const groups_cache = {};
+/**
+ * @param {KeyValues} kv
+ * @param {KeyValues} kv_types
+ * @returns {Array<string, string>}
+ */
+function GetGroupForKV(kv, kv_types) {
+	const hash = GetKVPath(kv).join("|");
+	if (groups_cache[hash] != undefined) {
+		return groups_cache[hash];
+	}
+	console.log("get group", kv.Key);
+	let kv_path = [];
+	let parent = kv.GetParent();
+	while (parent != undefined) {
+		if (parent.Key == "__KeyValues_Root__") {
+			break;
+		}
+		kv_path.unshift(GetGroupForKV(parent, kv_types)[0] || parent.Key);
+		parent = parent.GetParent();
+	}
 	let child = kv_types;
 	for (const current_key of kv_path) {
 		child = child.FindKey(current_key);
 		if (child == undefined || !child.HasChildren()) {
+			groups_cache[hash] = [];
 			return [];
 		}
 	}
 	for (const child_kv of child.FindAll(() => (true))) {
-		const keys = child_kv.Key.split("|");
-		const [group_name, group_type, regex] = [keys[0], keys[1], keys.slice(2)];
-		if (group_name != undefined && group_type != undefined && regex != undefined) {
+		let [group_type, regex] = [child_kv.FindKey("___$$$types"), child_kv.FindKey("___$$$regex")];
+		if (group_type != undefined) {
+			[group_type, regex] = [Object.keys(group_type.toObject()).join(" | ").replaceAll("'", "\""), regex.GetValue()];
 			const regexp = new RegExp(regex);
-			if (regexp.exec(kv.Key) != null) {
-				return [group_name, group_type];
+			if (regex != "" && regexp.exec(kv.Key) != null) {
+				groups_cache[hash] = [child_kv.Key, group_type];
+				return [child_kv.Key, group_type];
 			}
 		}
 	}
+	groups_cache[hash] = [];
 	return [];
+}
+
+function generateTypeScriptInterface(obj, indent=1) {
+	function convertValue(value) {
+		if (Array.isArray(value)) {
+			return `${value.join(' | ')}`;
+		} else if (typeof value === 'object' && value !== null && value["___$$$kv_parser_maybe_undefined"] === 1) {
+			delete value["___$$$kv_parser_maybe_undefined"];
+			return `${generateTypeScriptInterface(value, indent + 1)}`;
+		} else if (typeof value === 'object' && value !== null) {
+			return `${generateTypeScriptInterface(value, indent + 1)}`;
+		} else {
+			return value;
+		}
+	}
+
+	let interfaceString = '{\n';
+	for (const key in obj) {
+		interfaceString += '\t'.repeat(indent);
+		const optionalSyntax = obj[key]["___$$$kv_parser_maybe_undefined"] === 1 || (Array.isArray(obj[key]) && obj[key].includes("undefined")) ? '?' : '';
+		const types = convertValue(obj[key]).split(" | ").filter((v, i, a) => v != "undefined").join(" | ");
+		const keyname = (!key.startsWith("[") && key.indexOf(" ") !== -1) || ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].some((char, i, a) => (key.startsWith(char))) || ["/", "'"].some((char, i, a) => (key.indexOf(char) !== -1)) ? `"${key}"` : key;
+		const use_optional = !keyname.endsWith("]");
+		interfaceString += `${keyname}${use_optional ? optionalSyntax : ""}: ${types}${!use_optional && optionalSyntax == "?" ? " | undefined" : ""},\n`;
+	}
+	interfaceString += '\t'.repeat(indent - 1) + '}';
+	return interfaceString;
 }
 
 
 async function main() {
-	const items_game_kv = await KeyValues.Load("items_game.txt");
-	const items_game_types_kv = await KeyValues.Load("items_game_1.txt");
-	console.log(JSON.stringify(ParseKeyValues(items_game_kv, items_game_types_kv), undefined, "\t"));
+	const items_game_kv = await KeyValues.Load(FILENAME);
+	const items_game_types_kv = await KeyValues.Load(`${path.parse(FILENAME).name}_types${path.extname(FILENAME)}`);
+	console.log("start")
+	const interface_kv = ParseKeyValues(items_game_kv, items_game_types_kv)["__KeyValues_Root__"];
+	const interface_string = `interface ${Object.keys(interface_kv)[0]} ${generateTypeScriptInterface(interface_kv)};`;
+	fs.writeFileSync(`${path.parse(FILENAME).name}.d.ts`, interface_string);
 }
 
 main();

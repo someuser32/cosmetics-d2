@@ -10,6 +10,7 @@ scripts/*
 
 # Generated files
 **/items_game.txt
+**/items_game.d.ts
 **/non_configurable.txt
 **/behaviors.json
 

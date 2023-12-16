@@ -360,7 +360,7 @@ interface ItemsGameItem extends ItemsGamePrefab {
 		[heroname : string] : number
 	} | number,
 	portraits : {
-		"icon" : {
+		icon : {
 			[portrait_key : string] : any
 		}
 	} | undefined,
