@@ -1,0 +1,19 @@
+{
+  "name": "keyvalues_to_interfaces",
+  "version": "1.0.0",
+  "description": "an application to parse valve keyvalues and convert them into typescript interfaces",
+  "main": "index.js",
+  "scripts": {
+    "main": "node index.js"
+  },
+  "author": "SniperX",
+  "type": "module",
+  "license": "ISC",
+  "dependencies": {
+    "easy-keyvalues": "^1.2.2",
+    "kvparser": "^1.0.2",
+    "recursive-diff": "^1.0.9",
+    "regedit": "^5.1.2",
+    "vpk2": "^0.2.0"
+  }
+}

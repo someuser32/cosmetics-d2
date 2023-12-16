@@ -1,0 +1,15 @@
+"items_game"
+{
+	"store_currency_pricepoints"
+	{
+		"currency_id|number|\d+"
+		{
+		}
+	}
+	"items"
+	{
+		"item_id|number|\d+"
+		{
+		}
+	}
+}
