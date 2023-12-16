@@ -794,6 +794,27 @@ interface ItemsGameItemAdditionalInfo {
 	display_msg: string,
 }
 
+interface ItemsGameItemAssetModifier {
+	model_player?: string,
+	name?: string,
+	alternate_icon?: number,
+	unlock?: {
+		gem: {
+			def_index: number,
+			type_field: string,
+			type_value: number,
+			unlock_field: string,
+			unlock_value: number,
+		},
+		item_def?: number,
+		price?: number,
+	},
+	icon_path?: string,
+	skin?: number,
+	auto_style_rule?: string,
+	auto_style_reason?: string,
+}
+
 interface ItemsGameItem {
 	name: string,
 	prefab: string,
@@ -805,10 +826,10 @@ interface ItemsGameItem {
 	item_type_name?: string,
 	static_attributes: {
 		[attribute_name: string]: string | number,
-	},
+	} | number | string,
 	used_by_heroes: {
-		[hero_name: string | number]: number,
-	} | undefined,
+		[hero_name: string]: number,
+	} | number | undefined,
 	event_id?: string,
 	hide_in_store?: number,
 	item_slot?: string,
@@ -822,7 +843,7 @@ interface ItemsGameItem {
 		[portrait: string]: ItemsGameItemPortrait,
 	},
 	visuals?: {
-		[asset_modifier: string]: number,
+		[asset_modifier: string]: ItemsGameItemAssetModifier | number | string,
 	},
 	particle_folder?: string,
 	baseitem?: number,

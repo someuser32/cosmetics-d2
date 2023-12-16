@@ -6,6 +6,7 @@ import rdiff from "recursive-diff";
 const {getDiff} = rdiff;
 import * as fs from "node:fs";
 import path from "path";
+import * as util from "node:util";
 
 
 const FILENAME = "items_game.txt";
@@ -28,30 +29,30 @@ function isObject(item) {
  */
 function mergeDeep(target, source) {
 	let output = Object.assign({}, target);
+
 	if (isObject(target) && isObject(source)) {
 		Object.keys(source).forEach(key => {
-			if (isObject(source[key])) {
-				if (!(key in target)) {
-					Object.assign(output, {[key]: source[key]});
-				} else {
-					output[key] = mergeDeep(target[key], source[key]);
+			if (isObject(source[key]) && Array.isArray(output[key])) {
+				const temp = output[key].slice();
+				if (!isObject(output[key])) {
+					output[key] = Object.assign({ "___$$$array": [] }, source[key]);
 				}
-			} else if (Array.isArray(source[key])) {
-				if (target[key] == undefined) {
-					Object.assign(output, {[key]: source[key]});
-				} else if (Array.isArray(output[key])) {
-					output[key].push(...source[key]);
-				} else {
-					if (output[key]["___$$$array"] == undefined) {
-						output[key]["___$$$array"] = [];
-					}
-					output[key]["___$$$array"].push(...source[key]);
+				output[key]["___$$$array"].push(...temp);
+			} else if (Array.isArray(source[key]) && isObject(output[key])) {
+				if (output[key]["___$$$array"] == undefined) {
+					output[key]["___$$$array"] = [];
 				}
+				output[key]["___$$$array"].push(...source[key]);
+			} else if (isObject(source[key]) && isObject(output[key])) {
+				output[key] = mergeDeep(output[key], source[key]);
+			} else if (Array.isArray(source[key]) && Array.isArray(output[key])) {
+				output[key] = output[key].concat(source[key]);
 			} else {
 				Object.assign(output, {[key]: source[key]});
 			}
 		});
 	}
+
 	return output;
 }
 
