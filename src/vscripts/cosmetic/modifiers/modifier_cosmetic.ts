@@ -9,7 +9,6 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 	hEntity?: CDOTA_BaseNPC;
 	hEntityModifier?: modifier_cosmetic_wearable_ts;
 	particle_replacements: ParticleReplacements = {};
-	ranged_projectile?: string;
 	persona?: number;
 
 	GetAttributes(): ModifierAttribute {

@@ -81,7 +81,7 @@ export class Cosmetic {
 	}
 
 	public PostInit(): void {
-		// this.InitSlots();
+		this.InitSlots();
 		this.InitItems();
 		this.InitParticles();
 	}
@@ -190,12 +190,10 @@ export class Cosmetic {
 						const item_model = item["model_player"] ?? "";
 						const item_visuals = item["visuals"] ?? {};
 						for (const [_, asset] of Object.entries(item_visuals)) {
-							if (asset != null && typeof(asset) == "object" && asset["type"] != undefined) {
-								if (typeof asset["modifier"] == "string" && ["particle", "particle_create"].includes(asset["type"])) {
-									const attach_id = attach_ids[asset["modifier"]]
-									if (attach_id != undefined) {
-										item_visuals[_]["attachments"] = items_game["items_game"]["attribute_controlled_attached_particles"][attach_id];
-									}
+							if (typeof(asset) == "object" && typeof asset["modifier"] == "string" && ["particle", "particle_create"].includes(asset["type"]!)) {
+								const attach_id = attach_ids[asset["modifier"]]
+								if (attach_id != undefined) {
+									item_visuals[_]["attachments"] = items_game["items_game"]["attribute_controlled_attached_particles"][attach_id];
 								}
 							}
 						}

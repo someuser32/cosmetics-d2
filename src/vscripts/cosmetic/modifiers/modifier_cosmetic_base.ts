@@ -3,6 +3,7 @@ import { BaseModifier } from "../../addon_init";
 
 import { modifier_cosmetic_model_ts } from "./modifier_cosmetic_model";
 import { modifier_cosmetic_activity_ts } from "./modifier_cosmetic_activity";
+import { modifier_cosmetic_ranged_projectile_ts } from "./modifier_cosmetic_ranged_projectile";
 
 export declare type params = {
 	style : number | undefined,
@@ -30,6 +31,7 @@ export class ModifierCosmeticBase extends BaseModifier {
 	model_bodygroups : SpecialBehaviorModelInfo["bodygroups"] = {};
 	activity? : string;
 	healthbar_offset? : number;
+	ranged_projectile? : string;
 	unit_models : UnitModels = {};
 
 	IsHidden(): boolean {
@@ -151,6 +153,13 @@ export class ModifierCosmeticBase extends BaseModifier {
 			modifier_cosmetic_activity_ts.apply(this.parent, this.parent, undefined, {"activity": activity});
 		} else {
 			this.parent.RemoveModifierByName(modifier_cosmetic_activity_ts.name);
+		}
+
+		const ranged_projectile : string | undefined = this.GetSharedValue("ranged_projectile");
+		if (ranged_projectile != undefined) {
+			modifier_cosmetic_ranged_projectile_ts.apply(this.parent, this.parent, undefined, {"ranged_projectile": ranged_projectile});
+		} else {
+			this.parent.RemoveModifierByName(modifier_cosmetic_ranged_projectile_ts.name);
 		}
 	}
 

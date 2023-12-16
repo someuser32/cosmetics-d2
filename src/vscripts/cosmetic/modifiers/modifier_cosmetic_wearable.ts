@@ -201,7 +201,6 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 					}
 				}
 				ParticleManager.SetParticleControlEnt(fx, parseInt(control_point), this.parent, control_point_info["pattach"], control_point_info["attach"], vector, true);
-				print(control_point, control_point_info["pattach"], control_point_info["attach"], vector)
 			}
 			this.particles[particle_name] = fx;
 		}
