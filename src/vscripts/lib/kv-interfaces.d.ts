@@ -1,3 +1,9 @@
+interface RGBColor {
+	r: number,
+	g: number,
+	b: number,
+}
+
 interface PrecacheKV {
 	[asset_name : string | "particle" | "model" | "soundfile" | "particle_folder"] : string
 }
@@ -222,218 +228,830 @@ interface NPCHeroesKV {
 	[heroname: string | "Version"] : NPCHeroKV | number
 }
 
+interface ItemsGameGameInfo {
+	first_valid_class: number,
+	last_valid_class: number,
+	first_valid_item_slot: number,
+	last_valid_item_slot: number,
+	num_item_presets: number,
+}
+
 interface ItemsGameStoreCurrencyPricePoint {
-	GBP : number,
-	EUR : number,
-	RUB : number,
-	BRL : number,
-	JPY : number,
-	NOK : number,
-	IDR : number,
-	MYR : number,
-	PHP : number,
-	SGD : number,
-	THB : number,
-	VND : number,
-	KRW : number,
-	TRY : number,
-	UAH : number,
-	MXN : number,
-	CAD : number,
-	AUD : number,
-	NZD : number,
-	CNY : number,
-	TWD : number,
-	HKD : number,
-	INR : number,
-	AED : number,
-	SAR : number,
-	ZAR : number,
-	COP : number,
-	PEN : number,
-	CLP : number,
-	CHF : number,
-	ARS : number,
-	CRC : number,
-	ILS : number,
-	KZT : number,
-	KWD : number,
-	PLN : number,
-	QAR : number,
-	UYU : number
+	GBP: number,
+	EUR: number,
+	RUB: number,
+	BRL: number,
+	JPY: number,
+	NOK: number,
+	IDR: number,
+	MYR: number,
+	PHP: number,
+	SGD: number,
+	THB: number,
+	VND: number,
+	KRW: number,
+	TRY: number,
+	UAH: number,
+	MXN: number,
+	CAD: number,
+	AUD: number,
+	NZD: number,
+	CNY: number,
+	TWD: number,
+	HKD: number,
+	INR: number,
+	AED: number,
+	SAR: number,
+	ZAR: number,
+	COP: number,
+	PEN: number,
+	CLP: number,
+	CHF: number,
+	ARS: number,
+	CRC: number,
+	ILS: number,
+	KZT: number,
+	KWD: number,
+	PLN: number,
+	QAR: number,
+	UYU: number,
 }
 
 interface ItemsGameRarity {
-	value : number,
-	loc_key : string,
-	color : string,
-	next_rarity : string
+	value: number,
+	loc_key: string,
+	color: string,
+	next_rarity?: string,
 }
 
 interface ItemsGameQuality {
-	value : number,
-	hexColor : string,
-	sortPriority : number,
-	displayName : string
+	value: number,
+	hexColor: string,
+	sortPriority: number,
+	displayName: string,
 }
 
 interface ItemsGameColor {
-	color_name : string,
-	hex_color : string
+	color_name: string,
+	hex_color: string,
 }
 
-interface ItemsGameItemCapabilities {
-	nameable : 0 | 1 | undefined,
-	can_have_sockets : 0 | 1 | undefined,
-	gems_can_be_extracted : 0 | 1 | undefined,
-	can_gift_wrap : 0 | 1 | undefined,
-	usable_gc : 0 | 1 | undefined,
-	usable_out_of_game : 0 | 1 | undefined,
-	decodable: 0 | 1 | undefined,
-	can_consume : 0 | 1 | undefined,
-	is_gem : 0 | 1 | undefined
+interface ItemsGamePrefabCapabilities {
+	nameable: number,
+	can_have_sockets?: number,
+	gems_can_be_extracted?: number,
+	can_gift_wrap?: number,
+	usable_gc?: number,
+	usable_out_of_game?: number,
+	decodable?: number,
+	usable?: number,
+	is_gem?: number,
+	no_key_required?: number,
 }
 
-interface ItemsGameItemTreasureChest {
-	name : string,
-	text : string,
-	icon : string,
-	desc : string,
-	desc_color : string
+interface ItemsGamePrefabTool {
+	type: string,
+	use_string: string,
+	usage_capabilities?: {
+		can_consume: number,
+	},
+	sticker_qualities?: {
+		[sticker_id: number]: string,
+	},
+}
+
+interface ItemsGamePrefabTreasureChest {
+	name: string,
+	text: string,
+	icon: string,
+	desc: string,
+	desc_color: string,
 }
 
 interface ItemsGamePrefab {
-	item_class : string,
-	item_type_name : string,
-	item_name : string,
-	item_slot : string | undefined,
-	item_quality : string,
-	item_rarity : string,
-	min_ilevel : number,
-	max_ilevel : number,
-	capabilities : ItemsGameItemCapabilities,
-	baseitem : 0 | 1 | undefined,
-	player_loadout : 0 | 1 | undefined,
-	tool : {
-		type : string,
-		use_string : string | undefined,
-		usage_capabilities : ItemsGameItemCapabilities | undefined,
-		sticker_qualities : {
-			[id : number] : string
+	item_class: string,
+	item_type_name: string,
+	item_name: string,
+	item_slot?: string,
+	item_quality: string,
+	item_rarity: string,
+	min_ilevel?: number,
+	max_ilevel?: number,
+	capabilities: ItemsGamePrefabCapabilities,
+	baseitem?: number,
+	tool?: ItemsGamePrefabTool,
+	player_loadout?: number,
+	treasure_chest?: {
+		[treasure_name: string]: ItemsGamePrefabTreasureChest,
+	},
+	perfect_world_explicit_whitelist?: number,
+}
+
+interface ItemsGameItemCapabilities {
+	is_gem: number,
+	can_increment: number,
+	can_have_sockets?: number,
+	gems_can_be_extracted?: number,
+	nameable?: number,
+	can_gift_wrap?: number,
+	usable_gc?: number,
+	usable_out_of_game?: number,
+	usable?: number,
+	uses_essence?: number,
+	decodable?: number,
+	no_key_required?: number,
+	no_equip_to_use?: number,
+	can_have_signatures?: number,
+}
+
+interface ItemsGameItemTool {
+	type: string,
+	usage: {
+		filter_autograph_id: number,
+		loot_list?: string,
+		num_items?: number,
+		max_recipients?: number,
+		target_rule?: string,
+		required_tags?: {
+			[team_name: string]: number,
+		},
+		components?: {
+			input: {
+				chances: {
+					[chance: number]: number,
+				},
+				[input_id: number]: {
+					type: string,
+					criteria?: {
+						rarity: string,
+						quality?: string,
+					},
+					counts: {
+						[count: number]: number,
+					},
+					lootlist?: string,
+					item?: string,
+					chance?: number,
+					event_id?: string,
+				} | undefined,
+			},
+			output: {
+				[output_id: number]: {
+					type: string,
+					lootlist: string,
+					cannot_match_input: number,
+					criteria: {
+						rarity: string,
+						quality?: string,
+					},
+					item?: string,
+					dynamic_attributes?: {
+						[dynamic_attribute_id: number]: {
+							attrib_name: string,
+							value: number,
+						},
+					},
+					event_id?: number,
+					actions?: {
+						[action_id: number]: number,
+					},
+					normal_pts?: number,
+					dup_protection?: number,
+					associated_item_def?: number,
+				},
+			},
+		},
+		league_id?: number,
+		order?: number,
+		tier?: string,
+		location?: string,
+		style?: number,
+		item_def?: number,
+		selection_index?: number,
+		selection_value?: number,
+		selection_additive?: number,
+		premium?: number,
+		prize_pool?: {
+			base_prize_pool: number,
+			stop_sales_time: number,
+			description: string,
+			items: {
+				item: {
+					itemdef: number,
+					additional_pool: number,
+					revenue_percent?: number,
+				},
+				[item_id: number]: {
+					itemdef: number,
+					additional_pool?: number,
+					revenue_percent?: number,
+				} | undefined,
+			},
+		},
+		static_recipe?: number,
+		context_menu_prompt?: string,
+		context_menu_confirm?: string,
+		context_menu_confirm_title?: string,
+		disable_delete?: number,
+		sell_on_charm_dialog?: number,
+		track_failure?: number,
+		reset_on_failure?: number,
+		destroy_after_failures?: number,
+		reward_after_wins?: number,
+		reward_item_def?: number,
+		notify_server?: number,
+		failure_loot_list?: string,
+		wins_event_type?: number,
+		all_pick_only?: number,
+		reward_loot_list?: string,
+		peek_inside_chest_item_def?: number,
+		reward_premium_pts?: number,
+		reward_display_item_def?: number,
+		event_id?: number | string,
+		reward_action_id?: number,
+		featured_charm_until?: number,
+		emoticon_id_start?: number,
+		emoticon_id_end?: number,
+		status_effect?: number,
+		effigy_itemdef_index?: number,
+		unlock_override_quality?: string,
+		unlocks?: {
+			[unlock_id: number]: {
+				style: number,
+				item_def: number,
+			},
+		},
+		usage_capabilities?: {
+			nameable: number,
+		},
+		use_string?: string,
+		is_reward_repeatable?: number,
+		reward_normal_pts?: number,
+		reward_normal_pts_escalation_amount?: number,
+		reward_normal_pts_escalation_limit?: number,
+		reward_action_name?: string,
+		duration_seconds?: number,
+		backpack_slots?: number,
+		redemption?: string,
+		drop_rate_bonus?: number,
+		duration_hours?: number,
+		admin?: number,
+		private?: number,
+		start_date?: number,
+		duration?: number,
+		timezone?: number,
+		teams?: {
+			[team_id: number]: number,
+		},
+		bonus_itemdefs?: {
+			[bonus_itemdef_id: number]: number,
+		},
+		disabled?: number,
+		expiration_date?: string,
+		hud_skin_item_def?: number,
+		purchase_bundle?: number,
+		dont_require_usage_confirmation?: number,
+		in_game_duration?: number,
+		free_to_spectate?: number,
+		points?: number,
+		premium_points?: number,
+		season_id?: number,
+		fantasy?: number,
+		require_league_id?: number,
+		compendium_league?: number,
+		compendium_selection?: number,
+		compendium_add_value?: number,
+		grant_league_def?: number | string,
+		grant_points_def?: number,
+		original_purchaser_field?: number,
+		type?: number,
+		season?: number,
+		end_date?: number,
+		matches_have_mvp_data?: number,
+		can_vote_for_mvp_data?: number,
+		tournament_location?: string,
+		organization?: string,
+		square_logo?: string,
+		published_file_id?: number,
+		product_id?: number,
+		grant_event_ownership?: number,
+		grant_event_points?: number,
+		already_owned_grant_points?: number,
+		confirm_string?: string,
+		grant_event_premium_points?: number,
+		safe?: number,
+		has_rollup?: number,
+		card_count?: number,
+		gold_rarity?: number,
+		grant_action_id?: number,
+		grant_steam_package?: number,
+		amount?: number,
+		action_id?: number,
+		linked_subscription_item?: string,
+		prepaid_time_duration?: number,
+		prepaid_time_units?: string,
+		support_grant?: number,
+		renewal_frequency?: number,
+		renewal_period?: string,
+		usage_title?: string,
+		usage_description?: string,
+		usage_class?: string,
+		already_owned_grant_premium_points?: number,
+	},
+	usage_capabilities: {
+		can_increment: number,
+		can_consume?: number,
+		nameable?: number,
+		decodable?: number,
+		uses_essence?: number,
+		can_have_sockets?: number,
+		can_gift_wrap?: number,
+		gems_can_be_extracted?: number,
+	},
+	use_string?: string,
+	restriction?: string,
+	id?: number,
+	name?: string,
+	playerimage?: string | number,
+	date_of_birth?: string,
+	country_code?: string,
+	role?: string,
+	team_name?: string,
+	team_image?: string,
+	match_id?: number,
+	hero_1?: number,
+	hero_2?: number,
+	hero_3?: number,
+	items_per_treasure?: number,
+	confirm_string?: string,
+	selection_already_set_string?: string,
+	selection_cant_stamp?: string,
+	event_id?: number,
+	open_action_id?: number,
+	no_dupe_loot_list_override?: string,
+	standard_item_giftable?: number,
+	standard_item_tradable_after?: string,
+	first_loot_list_override?: string,
+	sockets?: {
+		[socket_id: number]: number,
+	},
+	sticker_type?: string,
+	team_id?: number,
+	sticker_qualities?: {
+		[sticker_id: number]: string,
+	},
+	place_event_action?: number,
+	place_event_quality?: number,
+	place_event_id?: number,
+}
+
+interface ItemsGameItemPortrait {
+	PortraitLightPosition: string,
+	PortraitLightAngles: string,
+	PortraitLightFOV: number,
+	PortraitLightDistance: number,
+	PortraitLightColor: string,
+	PortraitShadowColor: string,
+	PortraitShadowScale: number,
+	PortraitGroundShadowScale: number,
+	PortraitAmbientColor: string,
+	PortraitAmbientScale: number,
+	PortraitSpecularColor: string,
+	PortraitSpecularDirection?: string,
+	PortraitSpecularPower?: number,
+	PortraitBackgroundColor1?: string,
+	PortraitBackgroundColor2?: string,
+	PortraitBackgroundColor3?: string,
+	PortraitBackgroundColor4?: string,
+	PortraitBackgroundTexture?: string,
+	PortraitAnimationActivity?: string,
+	PortraitAnimationCycle?: number,
+	PortraitAnimationRate?: number,
+	PortraitHideHero?: number,
+	PortraitLightScale: number,
+	PortraitAmbientDirection: string,
+	cameras: {
+		[camera_name: string]: {
+			PortraitPosition: string,
+			PortraitAngles: string,
+			PortraitFOV: number,
+			PortraitFar?: number,
 		} | undefined
-	} | undefined,
-	treasure_chest : {
-		[name : string] : ItemsGameItemTreasureChest
-	}
-}
-
-interface ItemsGameAttribute {
-	name : string,
-	attribute_class : string,
-	attribute_type : string,
-	storage_type : string,
-	hidden : 0 | 1 | undefined,
-	description_string : string | undefined,
-	description_format : string | undefined,
-	effect_type : string | undefined,
-	stored_as_integer : 0 | 1 | undefined
-}
-
-interface ItemsGameItemAssetModifier {
-	[asset_modifier : string] : any
-}
-
-interface ItemsGameItem extends ItemsGamePrefab {
-	name : string,
-	prefab : string,
-	creation_date : string,
-	image_inventory : string,
-	item_description : string,
-	item_slot : string | undefined,
-	static_attributes : {
-		[name : string] : {
-			attribute_class : string
-			value : number
+	},
+	PortraitParticle?: string,
+	PortraitHideParticles?: number,
+	PortraitHideDropShadow?: number,
+	PortraitDesaturateParticles?: number,
+	PortraitDesaturateHero?: number,
+	PortraitPlayIdleExpression?: number,
+	PortraitVignetteItem?: number,
+	hero_presets?: {
+		[hero_preset_name: string]: {
+			PortraitHeroRotation: string,
 		}
-	} | undefined,
-	used_by_heroes : {
-		[heroname : string] : number
-	} | number,
-	portraits : {
-		icon : {
-			[portrait_key : string] : any
+	},
+	EffectDissolveColor?: string,
+	PortraitBackgroundModel?: string,
+	PortraitAllowAnimatedPortrait?: number,
+	PortraitPosition?: string,
+	PortraitLookAt?: string,
+	PortraitFOV?: number,
+	PortraitFar?: number,
+	PortraitLightLookAt?: string,
+	PortraitAmbientOrigin?: string,
+	summons?: {
+		[summon_name: string]: {
+			Position: string,
+			Angles: string,
+			Scale: number,
 		}
+	},
+	GodraysFXColor?: string,
+	GroundfogFXColor?: string,
+	SummonPosition?: string,
+	SummonAngles?: string,
+	SummonCount?: number,
+	SummonScale?: number,
+	PortraitheadgroundColor1?: string,
+	PortraitheadgroundColor2?: string,
+	PortraitheadgroundColor3?: string,
+	PortraitheadgroundColor4?: string,
+	PortraitheadgroundTexture?: string,
+	PortraitshouldergroundColor1?: string,
+	PortraitshouldergroundColor2?: string,
+	PortraitshouldergroundColor3?: string,
+	PortraitshouldergroundColor4?: string,
+	PortraitshouldergroundTexture?: string,
+	PortraitweapongroundColor1?: string,
+	PortraitweapongroundColor2?: string,
+	PortraitweapongroundColor3?: string,
+	PortraitweapongroundColor4?: string,
+	PortraitweapongroundTexture?: string,
+}
+
+interface ItemsGameItemPriceInfo {
+	bucket: string,
+	class: string,
+	category_tags: string,
+	date: string,
+	price: number,
+	is_pack_item?: number,
+	bundle?: number,
+	new?: number,
+	quantity?: number,
+	regional_prices?: {
+		gbp: number,
+		eur: number,
+		chf: number,
+		rub: number,
+		pln: number,
+		brl: number,
+		jpy: number,
+		nok: number,
+		idr: number,
+		myr: number,
+		php: number,
+		sgd: number,
+		thb: number,
+		vnd: number,
+		krw: number,
+		try: number,
+		uah: number,
+		mxn: number,
+		cad: number,
+		aud: number,
+		nzd: number,
+		cny: number,
+		rmb: number,
+		inr: number,
+		clp: number,
+		pen: number,
+		cop: number,
+		zar: number,
+		hkd: number,
+		twd: number,
+		sar: number,
+		aed: number,
+		ars: number,
+		ils: number,
+		kzt: number,
+		kwd: number,
+		qar: number,
+		crc: number,
+		uyu: number,
+	},
+}
+
+interface ItemsGameItemTags {
+	is_weapon: number,
+	event_egg?: number,
+	[team_name: string]: number | undefined
+}
+
+interface ItemsGameItemStyle {
+	model_player: string,
+	name: string,
+	alternate_icon: number,
+}
+
+interface ItemsGameItemTreasureChest {
+	name: string,
+	text?: string,
+	icon: string,
+	desc: string,
+	desc_color: string,
+}
+
+interface ItemsGameItemCourierSlot {
+	horns: number,
+	teeth: number,
+	tail: number,
+	hair: number,
+	nose: number,
+	ears: number,
+	wings: number,
+	eyes: number,
+	effect: number,
+	feathers: number,
+}
+
+interface ItemsGameItemCourierWearable {
+	courier: string,
+	slot: string,
+	index: number,
+	flying?: number,
+}
+
+interface ItemsGameItemAutograph2 {
+	name: string | number,
+	workshoplink: number,
+	language: number,
+	icon_path: string,
+	filename_override?: number,
+}
+
+interface ItemsGameItemAdditionalInfo {
+	display_msg: string,
+}
+
+interface ItemsGameItem {
+	name: string,
+	prefab: string,
+	creation_date?: string,
+	image_inventory?: string,
+	item_description?: string,
+	item_name?: string,
+	item_rarity?: string,
+	item_type_name?: string,
+	static_attributes: {
+		[attribute_name: string]: string | number,
+	},
+	used_by_heroes: {
+		[hero_name: string | number]: number,
 	} | undefined,
-	model_player : string | undefined,
-	visuals : ItemsGameItemAssetModifier | undefined,
-	bundle : {
-		[item_name : string] : 0 | 1
-	} | undefined
+	event_id?: string,
+	hide_in_store?: number,
+	item_slot?: string,
+	hidden?: number,
+	item_quality?: string,
+	capabilities?: ItemsGameItemCapabilities,
+	tool?: ItemsGameItemTool,
+	image_inventory_overlay?: string,
+	model_player?: string,
+	portraits?: {
+		[portrait: string]: ItemsGameItemPortrait,
+	},
+	visuals?: {
+		[asset_modifier: string]: number,
+	},
+	particle_folder?: string,
+	baseitem?: number,
+	model_player1?: string,
+	model_player2?: string,
+	model_player3?: string,
+	player_loadout?: number,
+	match_cycle_to_parent?: number,
+	expiration_date?: string,
+	disable_hero_portrait_override?: number,
+	developer?: number,
+	price_info?: ItemsGameItemPriceInfo,
+	tags?: ItemsGameItemTags,
+	forced_item_quality?: string,
+	bundle?: {
+		[item_name: string]: number | string,
+	},
+	branding?: {
+		corporation_id: number,
+		team_id?: number,
+	},
+	has_store_custom_item_details_panel?: number,
+	override_attack_attachments?: number,
+	particle_snapshot?: string,
+	styles?: {
+		[style: number]: ItemsGameItemStyle,
+	},
+	hide_tradecraftdelete?: number,
+	reward_can_be_shown_in_toast?: number,
+	workshop_accepted?: number,
+	treasure_display_override?: string,
+	item_class?: string,
+	hide_in_inventory?: number,
+	associated_item?: number,
+	treasure_chest?: {
+		[treasure_chest_name: string]: ItemsGameItemTreasureChest,
+	},
+	courier_slots?: {
+		[courier_name: string]: ItemsGameItemCourierSlot,
+	},
+	courier_wearable?: ItemsGameItemCourierWearable,
+	frostivus_premium_price?: number,
+	frostivus_price?: number,
+	tournament_url?: string,
+	autograph?: ItemsGameItemAutograph2,
+	additional_info?: ItemsGameItemAdditionalInfo,
+	plus_auto_grant_yearly_pattern_start?: string,
+	plus_auto_grant_yearly_pattern_end?: string,
+	hide_in_purchase_popup?: number,
+	premium_point_cost?: number,
+	treasure_extra_layout_file?: string,
+	purchase_requirement_prompt_ok_event?: string,
+	purchase_requirement_prompt_ok_text?: string,
+	purchase_requirement_prompt_text?: string,
+	perfect_world_explicit_whitelist?: number,
+	recycle_recipes?: {
+		[recipe_tier: string]: number,
+	},
+	equip_all_items_in_set?: number,
+	shards_purchase_price?: number,
+	default_drop_quantity?: number,
+	hide_quantity?: number,
+	purchase_limited_quantity?: number,
+	shards_purchase_requires_subscription?: number,
+	set_parent_skin?: number,
+	preview_override_def_index?: number,
+	can_consume_all?: number,
+	use_treasure_detail_highlight?: number,
 }
 
 interface ItemsGameItemSet {
-	name : string,
-	items : {
-		[item_name : string] : 0 | 1
-	},
-	store_bundle : string,
-	portrait_image : string
+	[items: string]: string,
+}
+
+interface ItemsGameAttribute {
+	name: string,
+	attribute_class: string,
+	attribute_type?: string,
+	storage_type: string,
+	hidden?: number,
+	description_string?: string,
+	description_format?: string,
+	effect_type?: string,
+	stored_as_integer?: number,
+}
+
+interface ItemsGameAttributeControlledAttachedParticleControlPoint {
+	control_point_index: number,
+	attach_type: string,
+	attachment?: string,
+	position?: string,
+	attach_entity?: string,
 }
 
 interface ItemsGameAttributeControlledAttachedParticle {
-	system : string,
-	attach_type : string,
-	attach_entity : string | undefined,
-	control_points : {
-		[control_point : number] : {
-			control_point_index : number,
-			attach_type : string,
-			attachment : string | undefined
-		}
-	}
+	system: string,
+	attach_type?: string,
+	attach_entity?: string,
+	control_points: {
+		[control_point: number]: ItemsGameAttributeControlledAttachedParticleControlPoint,
+	},
+	resource?: string,
+	default_color?: RGBColor,
+	flying_courier_effect?: number,
+	ground_courier_effect?: number,
+	radiant_only_effect?: number,
+	dire_only_effect?: number,
+}
+
+interface ItemsGameLoot {
+	[loot_name: string]: number,
+}
+
+interface ItemsGameKillEaterScoreType {
+	type_name: string,
+	image?: string,
+	in_game_display_interval?: number,
+	in_game_display_all_teams?: number,
+	required_hero?: string,
+	works_in_turbo_mode?: number,
+	gives_normal_credit_in_turbo_mode?: number,
+	obsolete?: number,
+	allow_count_reset?: number,
+	use_bitmap_instead_of_increment?: number,
+	requires_win?: number,
+	hidden?: number,
+	use_max_instead_of_increment?: number,
+	challenge_instance?: string,
+}
+
+interface ItemsGameAssetModifierAsset {
+	type: string,
+	asset: string,
+	modifier: string,
+	apply_when_equipped_in_ability_effects_slot?: number,
+}
+
+interface ItemsGameAssetModifier {
+	[asset_modifier: number | string | "name" | "loc_key" | "file"]: ItemsGameAssetModifierAsset | string | undefined,
+}
+
+interface ItemsGamePartnerTeam {
+	name: string,
+	icon_path?: string,
+	in_game_item_def?: number,
+	image_banner?: string,
+	small_icon?: string,
+}
+
+interface ItemsGamePartnerCorporation {
+	name: string,
+	icon_path: string,
+	image_banner?: string,
+}
+
+interface ItemsGameItemAutographLevel {
+	icon_path: string,
+	name_modifier: string,
+}
+
+interface ItemsGameItemAutograph {
+	name: string | number,
+	autograph: string | number,
+	workshoplink?: number,
+	language: number,
+	icon_path?: string,
+	filename_override?: number,
+	name_modifier?: string,
+	levels?: {
+		[level: number]: ItemsGameItemAutographLevel,
+	},
+	event_id?: number,
 }
 
 interface ItemsGameKV {
 	items_game: {
-		game_info : {
-			first_valid_class : number,
-			last_valid_class : number,
-			first_valid_item_slot : number,
-			last_valid_item_slot : number,
-			num_item_presets : number
+		game_info: ItemsGameGameInfo,
+		store_currency_pricepoints: {
+			[currency_id: number]: ItemsGameStoreCurrencyPricePoint,
 		},
-		store_currency_pricepoints : {
-			[price : number] : ItemsGameStoreCurrencyPricePoint,
+		rarities: {
+			[rarity_name: string]: ItemsGameRarity,
 		},
-		rarities : {
-			[rarity : string] : ItemsGameRarity
+		qualities: {
+			[quality_name: string]: ItemsGameQuality,
 		},
-		qualities : {
-			[quality : string] : ItemsGameQuality
+		colors: {
+			[color_name: string]: ItemsGameColor,
 		},
-		colors : {
-			[color : string] : ItemsGameColor
+		player_loadout_slots: {
+			[loadout_id: number]: string,
 		},
-		player_loadout_slots : {
-			[loadout_id : number] : string
+		code_referenced_icons: {
+			[icon_path: string | "icon_path"]: string,
 		},
-		code_referenced_icons : {
-			[icon_path : string | "icon_path"] : string
+		prefabs: {
+			[prefab_name: string]: ItemsGamePrefab,
 		},
-		prefabs : {
-			[prefab_name : string] : ItemsGamePrefab
+		items: {
+			[item_id: number]: ItemsGameItem,
 		},
-		items : {
-			[item_id : number] : ItemsGameItem
+		item_sets: {
+			[item_name: string]: ItemsGameItemSet,
 		},
-		item_sets : {
-			[item_name : string] : ItemsGameItemSet
+		attributes: {
+			[attribute_id: number]: ItemsGameAttribute,
 		},
-		attributes : {
-			[attribute_id : number] : ItemsGameAttribute
+		attribute_controlled_attached_particles: {
+			[item_id: number]: ItemsGameAttributeControlledAttachedParticle
 		},
-		attribute_controlled_attached_particles : {
-			[item_id : number] : ItemsGameAttributeControlledAttachedParticle
-		}
-	}
+		loot_lists: {
+			[loot_id: number]: ItemsGameLoot,
+		},
+		kill_eater_score_types: {
+			[kill_eater_score_type_id: number]: ItemsGameKillEaterScoreType,
+		},
+		asset_modifiers: {
+			[asset_modifier_id: number]: ItemsGameAssetModifier,
+		},
+		partners: {
+			teams: {
+				[team_id: number]: ItemsGamePartnerTeam,
+			},
+			corporations: {
+				[corporation_id: number]: ItemsGamePartnerCorporation,
+			},
+		},
+		items_autographs: {
+			[item_autograph_id: number]: ItemsGameItemAutograph,
+		},
+	},
 }

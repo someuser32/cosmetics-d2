@@ -36,11 +36,16 @@ function mergeDeep(target, source) {
 				} else {
 					output[key] = mergeDeep(target[key], source[key]);
 				}
-			} else if (Array.isArray(source[key]) && (Array.isArray(output[key]) || target[key] == undefined)) {
+			} else if (Array.isArray(source[key])) {
 				if (target[key] == undefined) {
 					Object.assign(output, {[key]: source[key]});
-				} else {
+				} else if (Array.isArray(output[key])) {
 					output[key].push(...source[key]);
+				} else {
+					if (output[key]["___$$$array"] == undefined) {
+						output[key]["___$$$array"] = [];
+					}
+					output[key]["___$$$array"].push(...source[key]);
 				}
 			} else {
 				Object.assign(output, {[key]: source[key]});
@@ -334,12 +339,17 @@ function GetGroupForKV(kv, kv_types) {
 function generateTypeScriptInterface(obj, indent=1) {
 	function convertValue(value) {
 		if (Array.isArray(value)) {
-			return `${value.join(' | ')}`;
-		} else if (typeof value === 'object' && value !== null && value["___$$$kv_parser_maybe_undefined"] === 1) {
-			delete value["___$$$kv_parser_maybe_undefined"];
-			return `${generateTypeScriptInterface(value, indent + 1)}`;
+			return `${value.join(" | ")}`;
 		} else if (typeof value === 'object' && value !== null) {
-			return `${generateTypeScriptInterface(value, indent + 1)}`;
+			if (value["___$$$kv_parser_maybe_undefined"] != undefined) {
+				delete value["___$$$kv_parser_maybe_undefined"];
+			}
+			let other_types = undefined;
+			if (value["___$$$array"] != undefined) {
+				other_types = value["___$$$array"].slice();
+				delete value["___$$$array"];
+			}
+			return other_types != undefined && other_types.length > 0 ? `${generateTypeScriptInterface(value, indent + 1)} | ${convertValue(other_types)}` : generateTypeScriptInterface(value, indent + 1);
 		} else {
 			return value;
 		}

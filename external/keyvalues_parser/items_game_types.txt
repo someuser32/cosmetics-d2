@@ -92,7 +92,7 @@
 			}
 			"treasure_chest"
 			{
-				"treasure_name"
+				"treasure_chest_name"
 				{
 					"___$$$types"
 					{
@@ -137,13 +137,46 @@
 			}
 			"portraits"
 			{
-				"portrait"
+				"portrait_name"
 				{
 					"___$$$types"
 					{
 						"string" "1"
 					}
 					"___$$$regex" ".+"
+					"cameras"
+					{
+						"camera_name"
+						{
+							"___$$$types"
+							{
+								"string" "1"
+							}
+							"___$$$regex" ".+"
+						}
+					}
+					"hero_presets"
+					{
+						"hero_preset_name"
+						{
+							"___$$$types"
+							{
+								"string" "1"
+							}
+							"___$$$regex" ".+"
+						}
+					}
+					"summons"
+					{
+						"summon_name"
+						{
+							"___$$$types"
+							{
+								"string" "1"
+							}
+							"___$$$regex" ".+"
+						}
+					}
 				}
 			}
 			"visuals"
@@ -166,6 +199,17 @@
 						"number" "1"
 					}
 					"___$$$regex" "\d+"
+				}
+			}
+			"recycle_recipes"
+			{
+				"recipe_tier"
+				{
+					"___$$$types"
+					{
+						"string" "1"
+					}
+					"___$$$regex" ".+"
 				}
 			}
 			"treasure_chest"
