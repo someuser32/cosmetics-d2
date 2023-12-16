@@ -137,24 +137,13 @@
 			}
 			"portraits"
 			{
-				"icon"
-				{
-					"portrait_key"
-					{
-						"___$$$types"
-						{
-							"string" "1"
-						}
-						"___$$$regex" ".+"
-					}
-				}
-				"model_name"
+				"portrait"
 				{
 					"___$$$types"
 					{
 						"string" "1"
 					}
-					"___$$$regex" "models/.+\.vmdl"
+					"___$$$regex" ".+"
 				}
 			}
 			"visuals"
@@ -166,6 +155,50 @@
 						"string" "1"
 					}
 					"___$$$regex" ".+"
+				}
+			}
+			"styles"
+			{
+				"style"
+				{
+					"___$$$types"
+					{
+						"number" "1"
+					}
+					"___$$$regex" "\d+"
+				}
+			}
+			"treasure_chest"
+			{
+				"treasure_chest_name"
+				{
+					"___$$$types"
+					{
+						"string" "1"
+					}
+					"___$$$regex" ".+"
+				}
+			}
+			"courier_slots"
+			{
+				"courier_name"
+				{
+					"___$$$types"
+					{
+						"string" "1"
+					}
+					"___$$$regex" ".+"
+				}
+			}
+			"tags"
+			{
+				"team_name"
+				{
+					"___$$$types"
+					{
+						"string" "1"
+					}
+					"___$$$regex" "team_pennant_"
 				}
 			}
 			"bundle"
@@ -181,6 +214,17 @@
 			}
 			"tool"
 			{
+				"sockets"
+				{
+					"socket_id"
+					{
+						"___$$$types"
+						{
+							"number" "1"
+						}
+						"___$$$regex" "\d+"
+					}
+				}
 				"sticker_qualities"
 				{
 					"sticker_id"
@@ -190,6 +234,136 @@
 							"number" "1"
 						}
 						"___$$$regex" "\d+"
+					}
+				}
+				"usage"
+				{
+					"required_tags"
+					{
+						"team_name"
+						{
+							"___$$$types"
+							{
+								"string" "1"
+							}
+							"___$$$regex" ".+"
+						}
+					}
+					"components"
+					{
+						"input"
+						{
+							"chances"
+							{
+								"chance"
+								{
+									"___$$$types"
+									{
+										"number" "1"
+									}
+									"___$$$regex" "\d+"
+								}
+							}
+							"input_id"
+							{
+								"___$$$types"
+								{
+									"number" "1"
+								}
+								"___$$$regex" "\d+"
+								"counts"
+								{
+									"count"
+									{
+										"___$$$types"
+										{
+											"number" "1"
+										}
+										"___$$$regex" "\d+"
+									}
+								}
+							}
+						}
+						"output"
+						{
+							"output_id"
+							{
+								"___$$$types"
+								{
+									"number" "1"
+								}
+								"___$$$regex" "\d+"
+								"dynamic_attributes"
+								{
+									"dynamic_attribute_id"
+									{
+										"___$$$types"
+										{
+											"number" "1"
+										}
+										"___$$$regex" "\d+"
+									}
+								}
+								"actions"
+								{
+									"action_id"
+									{
+										"___$$$types"
+										{
+											"number" "1"
+										}
+										"___$$$regex" "\d+"
+									}
+								}
+							}
+						}
+					}
+					"prize_pool"
+					{
+						"items"
+						{
+							"item_id"
+							{
+								"___$$$types"
+								{
+									"number" "1"
+								}
+								"___$$$regex" "\d+"
+							}
+						}
+					}
+					"unlocks"
+					{
+						"unlock_id"
+						{
+							"___$$$types"
+							{
+								"number" "1"
+							}
+							"___$$$regex" "\d+"
+						}
+					}
+					"teams"
+					{
+						"team_id"
+						{
+							"___$$$types"
+							{
+								"number" "1"
+							}
+							"___$$$regex" "\d+"
+						}
+					}
+					"bonus_itemdefs"
+					{
+						"bonus_itemdef_id"
+						{
+							"___$$$types"
+							{
+								"number" "1"
+							}
+							"___$$$regex" "\d+"
+						}
 					}
 				}
 			}
@@ -262,8 +436,19 @@
 				{
 					"string" "1"
 				}
-				"___$$$regex" "^(?!additional_drop|escalating_chance_drop_by_rarity|treasure_chest_119_lockless_luckvase_2015|type_name|image|challenge_instance|required_hero|in_game_display_interval|in_game_display_all_teams|slot|items|treasure_rarity_override|item).+$"
+				"___$$$regex" "^(?!additional_drop)."
 			}
+		}
+	}
+	"kill_eater_score_types"
+	{
+		"kill_eater_score_type_id"
+		{
+			"___$$$types"
+			{
+				"number" "1"
+			}
+			"___$$$regex" "\d+"
 		}
 	}
 	"asset_modifiers"
@@ -280,8 +465,9 @@
 				"___$$$types"
 				{
 					"string" "1"
+					"number" "1"
 				}
-				"___$$$regex" "^(?!name|loc_key).+$"
+				"___$$$regex" "(\d+)|(asset_modifier)"
 			}
 		}
 	}
@@ -319,6 +505,17 @@
 				"number" "1"
 			}
 			"___$$$regex" "\d+"
+			"levels"
+			{
+				"level"
+				{
+					"___$$$types"
+					{
+						"number" "1"
+					}
+					"___$$$regex" "\d+"
+				}
+			}
 		}
 	}
 }
