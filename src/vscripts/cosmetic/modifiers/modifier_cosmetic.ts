@@ -47,7 +47,14 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 	}
 
 	CopyTo(hero: CDOTA_BaseNPC): modifier_cosmetic_ts {
-		return modifier_cosmetic_ts.apply(hero, hero, undefined, this.kv);
+		const modifier = modifier_cosmetic_ts.apply(hero, hero, undefined, this.kv);
+		const item = GameRules.Cosmetic.items[this.kv != undefined ? this.kv.item_id : -1] as Item;
+		if (item == undefined) {
+			return modifier;
+		}
+		modifier.ReadVisuals(item.visuals);
+		modifier.ApplyVisuals();
+		return modifier;
 	}
 
 	ReadAsset(asset_name: string, asset: any, array?: ItemsGameItem["visuals"][]): void {

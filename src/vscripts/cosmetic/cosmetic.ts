@@ -1,3 +1,67 @@
+// [x] hero model replacement
+// [x] particle replacement
+// [x] ranged projectile replacement
+// [x] styles
+// [x] translate activity
+// [x] unit model replacement
+// [ ] bundles
+// [ ] taunts
+// [ ] voice
+// [ ] sound replacement
+// [ ] ability icon replacement
+// [ ] item icon replacement
+// [ ] hero icon replacement
+// [ ] wearable model replacement
+
+/*
+"asset_modifier"
+{
+	"type"		"model"
+	"asset"		"models/items/windrunner/ti6_windranger_offhand/ti6_windranger_offhand.vmdl"
+	"modifier"		"models/items/windrunner/ti6_windranger_offhand/ti6_wr_offhand_arcana_refit.vmdl"
+}
+"asset_modifier"
+{
+	"type"		"ability_icon"
+	"asset"		"windrunner_shackleshot"
+	"modifier"		"windrunner_shackleshot_arcana"
+	"style"		"0"
+	"minimum_priority"		"1"
+}
+"alternate_icons"
+{
+	"0"
+	{
+		"icon_path"		"econ/items/windrunner/windrunner_arcana/wr_arcana_head"
+	}
+	"1"
+	{
+		"icon_path"		"econ/items/windrunner/windrunner_arcana/wr_arcana_head_style1"
+	}
+}
+"asset_modifier"
+{
+	"type"		"inventory_icon"
+	"asset"		"force_staff"
+	"modifier"		"force_staff_wr_arcana"
+	"style"		"0"
+}
+"asset_modifier"
+{
+	"type"		"sound"
+	"asset"		"Hero_Nightstalker.CripplingFear.Aura"
+	"modifier"		"Hero_Nightstalker.CripplingFear.Aura.TI10"
+	"apply_when_equipped_in_ability_effects_slot"		"2"
+}
+"asset_modifier0"
+{
+	"type"		"entity_model"
+	"asset"		"npc_dota_loadout_generic"
+	"modifier"		"models/ui/treasure/bp_2022_treasure_rectangle/bp_2022_treasure_rectangle.vmdl"
+}
+*/
+
+
 import "../lib/kvparser/kvparser";
 import { reloadable } from "../lib/tstl-utils";
 import { GetAttribute, MathUtils, ObjectUtils, SetAttribute } from "../lib/client";
@@ -46,7 +110,7 @@ export class Cosmetic {
 		const valve_create_particle = ParticleManager.CreateParticle;
 
 		ParticleManager.CreateParticle = function(particleName: string, partileAttach: ParticleAttachment, owner: CBaseEntity | undefined, source?: PlayerID): ParticleID {
-			const playerOwnerID = source != undefined ? source : owner != undefined && owner.IsBaseNPC() ? owner.GetPlayerOwnerID() : -1;
+			const playerOwnerID = source != undefined ? source : IsValidEntity(owner) && owner.IsBaseNPC() ? owner.GetPlayerOwnerID() : -1;
 			const particleReplacement = GameRules.Cosmetic.GetParticleReplacements(playerOwnerID);
 			if (particleReplacement[particleName] != undefined) {
 				if (particleReplacement[particleName]["name"] != undefined) {
@@ -83,9 +147,12 @@ export class Cosmetic {
 	}
 
 	public PostInit(): void {
-		// this.InitSlots();
 		this.InitItems();
 		this.InitParticles();
+	}
+
+	public PostInitOnce(): void {
+		this.InitSlots();
 	}
 
 	public InitSlots(): void {
@@ -459,8 +526,7 @@ export class Cosmetic {
 	}
 
 	public UnequipDOTAItems(playerID: PlayerID): void {
-		// NOTE:
-		// for unknown reason, valve does not give us any way to remove their wearables
+		// NOTE: for unknown reason, valve does not give us any way to remove their wearables
 		// neither of SetParent, SetModel, AddEffects, Destroy, UTIL_Remove works
 		// idk how to fix it without using kv DisableWearables 1
 		// if you know, PM me at steam
@@ -532,16 +598,40 @@ export class Cosmetic {
 		if (!IsValidEntity(original_hero)) {
 			return;
 		}
+		hero.RemoveAllModifiersOfName(modifier_cosmetic_ts.name);
 		for (const mod of original_hero.FindAllModifiersByName(modifier_cosmetic_ts.name)) {
 			(mod as modifier_cosmetic_ts).CopyTo(hero);
 		}
 	}
 
 	public OnNPCSpawned(npc: CDOTA_BaseNPC): void {
+		const playerID = npc.GetPlayerOwnerID();
+        const original_hero = playerID != -1 ? PlayerResource.GetSelectedHeroEntity(playerID): undefined;
+
+		if (!IsValidEntity(original_hero) && !npc.IsTrueHero()) {
+			return;
+		}
+
+		const unit_name = npc.GetUnitName();
 		if (npc.IsTrueHero()) {
-			this.EquipDOTAItems(npc.GetPlayerOwnerID());
-		} else {
+			if (GetAttribute(npc, "bFirstSpawn", true) == true) {
+				const _this = this;
+				Timers.CreateTimer({"endTime": 0.2, "callback": () => {
+					if (!IsValidEntity(npc)) {
+						return;
+					}
+					_this.EquipDOTAItems(npc.GetPlayerOwnerID());
+				}}, this);
+			}
+		} else if (IsValidEntity(original_hero) && unit_name == original_hero.GetUnitName()) {
 			this.CopyWearables(npc);
+		} else {
+			const unitmodel_replacements = this.GetUnitModelReplacements(playerID);
+			const model_replacement = unitmodel_replacements[unit_name];
+			if (model_replacement != undefined) {
+				npc.SetModel(model_replacement["model"]);
+				npc.SetOriginalModel(model_replacement["model"]);
+			}
 		}
 	}
 
@@ -551,9 +641,24 @@ export class Cosmetic {
 		if (!IsValidEntity(hero)) {
 			return replacements;
 		}
-		for (const mod of hero.FindAllModifiersByName(modifier_cosmetic_ts.name)) {
-			const modifier = mod as modifier_cosmetic_ts;
+		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
+		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
+		for (const modifier of modifiers) {
 			Object.assign(replacements, modifier.particle_replacements);
+		}
+		return replacements;
+	}
+
+	public GetUnitModelReplacements(playerID: PlayerID): UnitModelsReplacements {
+		const replacements : UnitModelsReplacements = {};
+		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
+		if (!IsValidEntity(hero)) {
+			return replacements;
+		}
+		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
+		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
+		for (const modifier of modifiers) {
+			Object.assign(replacements, modifier.unit_models);
 		}
 		return replacements;
 	}

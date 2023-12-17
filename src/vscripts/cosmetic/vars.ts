@@ -1,4 +1,4 @@
-export const ATTACH_TYPES : {[attach_name : string] : ParticleAttachment} = {
+export const ATTACH_TYPES : {[attach_name: string]: ParticleAttachment} = {
 	["absorigin"]: ParticleAttachment.ABSORIGIN,
 	["absorigin_follow"]: ParticleAttachment.ABSORIGIN_FOLLOW,
 	["customorigin"]: ParticleAttachment.CUSTOMORIGIN,
@@ -14,4 +14,4 @@ export const ATTACH_TYPES : {[attach_name : string] : ParticleAttachment} = {
 	["POINT"]: ParticleAttachment.POINT,
 	["ROOTBONE_FOLLOW"]: ParticleAttachment.ROOTBONE_FOLLOW,
 	["WATERWAKE"]: ParticleAttachment.WATERWAKE,
-}
+};

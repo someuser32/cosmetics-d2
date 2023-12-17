@@ -6,7 +6,8 @@
 				"control_points": {
 					"-1": {
 						"pattach": "absorigin_follow",
-						"attach": "attach_hitloc"
+						"attach": "attach_hitloc",
+						"owner": "self"
 					}
 				},
 				"owner": "self",

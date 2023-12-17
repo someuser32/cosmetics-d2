@@ -33,6 +33,7 @@ export class GameMode {
         const state = GameRules.State_Get();
 
         if (state === GameState.CUSTOM_GAME_SETUP) {
+            GameRules.Cosmetic.PostInitOnce();
             GameRules.Cosmetic.PostInit();
         }
     }
@@ -44,19 +45,8 @@ export class GameMode {
 		}
         const playerID = npc.GetPlayerOwnerID();
         const original_hero = playerID != -1 ? PlayerResource.GetSelectedHeroEntity(playerID): undefined;
-		if (GetAttribute(npc, "bFirstSpawn", true) == true || !npc.IsTrueHero()) {
-            if (npc.IsHero()) {
-                if (IsValidEntity(original_hero) || npc.IsTrueHero()) {
-                    if (original_hero == undefined || npc.GetUnitName() == original_hero.GetUnitName()) {
-                        Timers.CreateTimer({"endTime": 0.2, "callback": () => {
-                            if (!IsValidEntity(npc)) {
-                                return;
-                            }
-                            GameRules.Cosmetic.OnNPCSpawned(npc);
-                        }}, this);
-                    }
-                }
-            }
+        GameRules.Cosmetic.OnNPCSpawned(npc);
+		if (GetAttribute(npc, "bFirstSpawn", true) == true) {
             SetAttribute(npc, "bFirstSpawn", false);
         }
 	}

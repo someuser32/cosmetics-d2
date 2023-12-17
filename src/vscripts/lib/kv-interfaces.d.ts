@@ -51,12 +51,12 @@ interface NPCHeroItemSlots {
 		SlotIndex : number,
 		SlotName : string,
 		SlotText : string,
-		TextureWidth : number | undefined,
-		TextureHeight : number | undefined,
-		MaxPolygonsLOD0 : number | undefined,
-		MaxPolygonsLOD1 : number | undefined,
-		no_import : 0 | 1 | undefined,
-		DisplayInLoadout : 0 | 1 | undefined,
+		TextureWidth?: number,
+		TextureHeight?: number,
+		MaxPolygonsLOD0?: number,
+		MaxPolygonsLOD1?: number,
+		no_import?: 0 | 1,
+		DisplayInLoadout?: 0 | 1,
 	}
 }
 

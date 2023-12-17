@@ -27,20 +27,22 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 	CheckState(): Partial<Record<ModifierState, boolean>> {
 		const states : Partial<Record<ModifierState, boolean>> = {[ModifierState.INVULNERABLE]: true, [ModifierState.NO_HEALTH_BAR]: true, [ModifierState.OUT_OF_GAME]: true, [ModifierState.MAGIC_IMMUNE]: true, [ModifierState.NO_UNIT_COLLISION]: true, [ModifierState.NOT_ON_MINIMAP]: true, [ModifierState.UNSELECTABLE]: true};
 
-		if (this.caster.IsInvisible()) {
-			states[ModifierState.INVISIBLE] = true;
-		}
+		if (IsValidEntity(this.caster)) {
+			if (this.caster.IsInvisible()) {
+				states[ModifierState.INVISIBLE] = true;
+			}
 
-		if (IsServer()) {
-			if (this.caster.HasModifierState(ModifierState.TRUESIGHT_IMMUNE, [this])) {
-				states[ModifierState.TRUESIGHT_IMMUNE] = true;
+			if (IsServer()) {
+				if (this.caster.HasModifierState(ModifierState.TRUESIGHT_IMMUNE, [this])) {
+					states[ModifierState.TRUESIGHT_IMMUNE] = true;
+				}
 			}
 		}
 		return states;
 	}
 
 	DeclareFunctions(): ModifierFunction[] {
-		return [ModifierFunction.ON_DEATH, ModifierFunction.ON_RESPAWN, ModifierFunction.INVISIBILITY_LEVEL, ModifierFunction.FIXED_DAY_VISION, ModifierFunction.FIXED_NIGHT_VISION];
+		return [ModifierFunction.ON_DEATH, ModifierFunction.ON_DEATH_COMPLETED, ModifierFunction.ON_RESPAWN, ModifierFunction.INVISIBILITY_LEVEL, ModifierFunction.FIXED_DAY_VISION, ModifierFunction.FIXED_NIGHT_VISION];
 	}
 
 	OnCreated(kv: params): void {
@@ -202,18 +204,17 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 			const owner = particle_info["owner"] == "parent" ? this.caster : this.parent;
 			const fx = ParticleManager.CreateParticle(particle_name, particle_info["pattach"], owner);
 			for (const [control_point, control_point_info] of Object.entries(particle_info["control_points"])) {
-				let vector = owner.GetAbsOrigin();
+				let vector = IsValidEntity(owner) ? owner.GetAbsOrigin() : Vector(0, 0, 0);
 				if (control_point_info["vector"] != undefined) {
 					if (typeof control_point_info["vector"] == "object") {
 						vector = Vector(...control_point_info["vector"])
 					} else if (control_point_info["vector"] == "parent") {
-						vector = owner.GetAbsOrigin();
+						vector = IsValidEntity(owner) ? owner.GetAbsOrigin() : Vector(0, 0, 0);
 					}
 				}
 				const cp_owner = control_point_info["owner"] == "parent" ? this.caster : this.parent;
 				ParticleManager.SetParticleControlEnt(fx, parseInt(control_point), cp_owner, control_point_info["pattach"], control_point_info["attach"], vector, true);
 			}
-			DeepPrintTable(particle_info)
 			this.particles[particle_name] = fx;
 		}
 	}
@@ -227,23 +228,25 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 	}
 
 	ResetVisuals(): void {
-		if (this.style == -1) {
-			this.parent.SetSkin(0);
-		}
-
-		if (this.model_bodygroups != undefined) {
-			for (const [bodygroup, value] of Object.entries(this.model_bodygroups)) {
-				this.parent.SetBodygroupByName(bodygroup, 0);
+		if (IsValidEntity(this.parent)) {
+			if (this.style == -1) {
+				this.parent.SetSkin(0);
 			}
 
-			const model_bodygroups = this.GetUnionValue("model_bodygroups", true) as SpecialBehaviorModelInfo["bodygroups"];
-			if (model_bodygroups != undefined) {
-				for (const [bodygroup, value] of Object.entries(model_bodygroups)) {
-					this.parent.SetBodygroupByName(bodygroup, value);
+			if (this.model_bodygroups != undefined) {
+				for (const [bodygroup, value] of Object.entries(this.model_bodygroups)) {
+					this.parent.SetBodygroupByName(bodygroup, 0);
 				}
-			}
 
-			this.model_bodygroups = {};
+				const model_bodygroups = this.GetUnionValue("model_bodygroups", true) as SpecialBehaviorModelInfo["bodygroups"];
+				if (model_bodygroups != undefined) {
+					for (const [bodygroup, value] of Object.entries(model_bodygroups)) {
+						this.parent.SetBodygroupByName(bodygroup, value);
+					}
+				}
+
+				this.model_bodygroups = {};
+			}
 		}
 
 		for (const fx of Object.values(this.particles)) {
@@ -266,11 +269,27 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 			return;
 		}
 
+		print("on death")
+
 		if (event.unit != this.caster) {
 			return;
 		}
 
 		this.parent.AddNoDraw();
+	}
+
+	OnDeathCompleted(event: ModifierInstanceEvent): void {
+		if (!IsServer()) {
+			return;
+		}
+
+		print("on death completed")
+
+		// if (event.unit != this.caster) {
+		// 	return;
+		// }
+
+		// this.parent.AddNoDraw();
 	}
 
 	OnRespawn(event: ModifierUnitEvent): void {
@@ -286,7 +305,7 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 	}
 
 	GetModifierInvisibilityLevel(): number {
-		return this.parent.IsInvisible() ? 1 : 0;
+		return IsValidEntity(this.parent) && this.parent.IsInvisible() ? 1 : 0;
 	}
 
 	GetFixedDayVision(): number {

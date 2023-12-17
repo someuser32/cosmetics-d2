@@ -98,3 +98,11 @@ interface ParticleReplacements {
 		},
 	}
 }
+
+interface UnitModelReplacement {
+	model : string
+}
+
+interface UnitModelsReplacements {
+	[unit_name : string] : UnitModelReplacement
+}

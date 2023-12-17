@@ -6,17 +6,9 @@ import { modifier_cosmetic_activity_ts } from "./modifier_cosmetic_activity";
 import { modifier_cosmetic_ranged_projectile_ts } from "./modifier_cosmetic_ranged_projectile";
 
 export declare type params = {
-	style : number | undefined,
-	model : string,
-	item_id : number
-}
-
-interface UnitModel {
-	model : string
-}
-
-interface UnitModels {
-	[unit_name : string] : UnitModel
+	style?: number,
+	model: string,
+	item_id: number
 }
 
 export class ModifierCosmeticBase extends BaseModifier {
@@ -32,7 +24,7 @@ export class ModifierCosmeticBase extends BaseModifier {
 	activity? : string;
 	healthbar_offset? : number;
 	ranged_projectile? : string;
-	unit_models : UnitModels = {};
+	unit_models : UnitModelsReplacements = {};
 
 	IsHidden(): boolean {
 		return true;
@@ -121,6 +113,9 @@ export class ModifierCosmeticBase extends BaseModifier {
 	}
 
 	ApplyVisuals(): void {
+		if (!IsValidEntity(this.parent)) {
+			return;
+		}
 		const healthbar_offset : number | undefined = this.GetSharedValue("healthbar_offset");
 		this.parent.SetHealthBarOffsetOverride(healthbar_offset ?? this.parent.GetBaseHealthBarOffset());
 
@@ -195,6 +190,9 @@ export class ModifierCosmeticBase extends BaseModifier {
 	}
 
 	GetSharedValueAndSource(value: string, ignore_self?: boolean): [any, ModifierCosmeticBase] | [] {
+		if (!IsValidEntity(this.parent)) {
+			return [];
+		}
 		const mods = this.parent.FindAllModifiersByName(this.GetName()) as ModifierCosmeticBase[];
 		mods.sort((a: ModifierCosmeticBase, b: ModifierCosmeticBase) => (b.GetPriority() - a.GetPriority() || a.GetCreationTime() - b.GetCreationTime()));
 		for (const mod of mods) {
@@ -214,6 +212,9 @@ export class ModifierCosmeticBase extends BaseModifier {
 	}
 
 	GetUnionValue(value: string, ignore_self?: boolean): {[key : string | number | symbol] : any} | undefined {
+		if (!IsValidEntity(this.parent)) {
+			return;
+		}
 		const mods = this.parent.FindAllModifiersByName(this.GetName()) as ModifierCosmeticBase[];
 		mods.sort((a: ModifierCosmeticBase, b: ModifierCosmeticBase) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
 		let result : {[key : string | number | symbol] : any} | undefined = undefined;
