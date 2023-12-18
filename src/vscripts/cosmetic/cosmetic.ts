@@ -4,22 +4,18 @@
 // [x] styles
 // [x] translate activity
 // [x] unit model replacement
-// [ ] bundles
-// [ ] taunts
-// [ ] voice
-// [ ] sound replacement
+// [x] sound replacement
+// [x] wearable model replacement
 // [ ] ability icon replacement
 // [ ] item icon replacement
 // [ ] hero icon replacement
-// [ ] wearable model replacement
+// [ ] color gems
+// [ ] bundles
+// [ ] taunts
+// [ ] voice
+// [ ] apply when equipped ability effect
 
 /*
-"asset_modifier"
-{
-	"type"		"model"
-	"asset"		"models/items/windrunner/ti6_windranger_offhand/ti6_windranger_offhand.vmdl"
-	"modifier"		"models/items/windrunner/ti6_windranger_offhand/ti6_wr_offhand_arcana_refit.vmdl"
-}
 "asset_modifier"
 {
 	"type"		"ability_icon"
@@ -46,19 +42,6 @@
 	"modifier"		"force_staff_wr_arcana"
 	"style"		"0"
 }
-"asset_modifier"
-{
-	"type"		"sound"
-	"asset"		"Hero_Nightstalker.CripplingFear.Aura"
-	"modifier"		"Hero_Nightstalker.CripplingFear.Aura.TI10"
-	"apply_when_equipped_in_ability_effects_slot"		"2"
-}
-"asset_modifier0"
-{
-	"type"		"entity_model"
-	"asset"		"npc_dota_loadout_generic"
-	"modifier"		"models/ui/treasure/bp_2022_treasure_rectangle/bp_2022_treasure_rectangle.vmdl"
-}
 */
 
 
@@ -77,7 +60,11 @@ const BEHAVIORS_JSON_URL = "http://127.0.0.1:8000/behaviors.json";
 
 declare global {
 	interface CScriptParticleManager {
-		CreateParticle(particleName: string, particleAttach: ParticleAttachment, owner: CBaseEntity | undefined, source?: PlayerID) : ParticleID
+		CreateParticle(particleName: string, particleAttach: ParticleAttachment, owner: CBaseEntity | undefined, source?: PlayerID): ParticleID
+	}
+
+	interface CBaseEntity {
+		EmitSound(soundName: string, source?: PlayerID): void;
 	}
 }
 
@@ -92,6 +79,7 @@ export class Cosmetic {
 	equipped_items : PlayersEquippedItems = {};
 	behaviors_json : BehaviorsJSON = {};
 	// particle_owners : {[particle : ParticleID] : [string, PlayerID]} = {}
+	possible_sound_replacements : {[sound_name: string]: string[]} = {};
 
 	constructor() {
 	}
@@ -143,7 +131,204 @@ export class Cosmetic {
 			return fx;
 		}
 
-		const valve_emitsound = CBaseEntity.EmitSound
+		function GetSoundForPlayerID(soundName: string, playerID: PlayerID): string {
+			const soundReplacement = GameRules.Cosmetic.GetSoundReplacements(playerID);
+			if (soundReplacement[soundName] != undefined) {
+				if (GameRules.Cosmetic.possible_sound_replacements[soundName] == undefined) {
+					GameRules.Cosmetic.possible_sound_replacements[soundName] = [];
+				}
+				if (!GameRules.Cosmetic.possible_sound_replacements[soundName].includes(soundReplacement[soundName])) {
+					GameRules.Cosmetic.possible_sound_replacements[soundName].push(soundReplacement[soundName]);
+				}
+				soundName = soundReplacement[soundName];
+			}
+			return soundName;
+		}
+
+		function GetPossibleSounds(soundName: string, playerID: PlayerID): string[] {
+			const sounds = [];
+			if (GameRules.Cosmetic.possible_sound_replacements[soundName] != undefined) {
+				sounds.push(...GameRules.Cosmetic.possible_sound_replacements[soundName]);
+			}
+			const soundReplacement = GameRules.Cosmetic.GetSoundReplacements(playerID);
+			if (soundReplacement[soundName] != undefined && !sounds.includes(soundReplacement[soundName])) {
+				sounds.push(soundReplacement[soundName]);
+			}
+			return sounds;
+		}
+
+		const valve_emitsound = CBaseEntity.EmitSound;
+
+		CBaseEntity.EmitSound = function(soundName: string, source?: PlayerID): void {
+			const soundOwnerID = source != undefined ? source : this.IsBaseNPC() ? this.GetPlayerOwnerID() : -1;
+			return valve_emitsound.bind(this)(GetSoundForPlayerID(soundName, soundOwnerID));
+		}
+
+		const valve_emitsound_params = CBaseEntity.EmitSoundParams;
+
+		CBaseEntity.EmitSoundParams = function(soundName: string, pitch: number, volume: number, delay: number, source?: PlayerID): void {
+			const soundOwnerID = source != undefined ? source : this.IsBaseNPC() ? this.GetPlayerOwnerID() : -1;
+			return valve_emitsound_params.bind(this)(GetSoundForPlayerID(soundName, soundOwnerID), pitch, volume, delay);
+		}
+
+		const valve_stopsound = CBaseEntity.StopSound;
+
+		CBaseEntity.StopSound = function(soundName: string, source?: PlayerID): void {
+			const soundOwnerID = source != undefined ? source : this.IsBaseNPC() ? this.GetPlayerOwnerID() : -1;
+			for (const possible_sound of GetPossibleSounds(soundName, soundOwnerID)) {
+				valve_stopsound.bind(this)(possible_sound);
+			}
+			return valve_stopsound.bind(this)(soundName);
+		}
+
+		const valve_emitannouncersound = EmitAnnouncerSound;
+
+		(EmitAnnouncerSound as any) = function(soundName: string, source?: PlayerID): void {
+			const soundOwnerID = source ?? -1;
+			return valve_emitannouncersound(GetSoundForPlayerID(soundName, soundOwnerID));
+		}
+
+		const valve_emitannouncersoundforplayer = EmitAnnouncerSoundForPlayer;
+
+		(EmitAnnouncerSoundForPlayer as any) = function(soundName: string, playerId: PlayerID, source?: PlayerID): void {
+			const soundOwnerID = source ?? playerId;
+			return valve_emitannouncersoundforplayer(GetSoundForPlayerID(soundName, soundOwnerID), playerId);
+		}
+
+		const valve_emitannouncersoundforteam = EmitAnnouncerSoundForTeam;
+
+		(EmitAnnouncerSoundForTeam as any) = function(soundName: string, team: DotaTeam, source?: PlayerID): void {
+			const soundOwnerID = source ?? -1;
+			return valve_emitannouncersoundforteam(GetSoundForPlayerID(soundName, soundOwnerID), team);
+		}
+
+		const valve_emitannouncersoundforteamonlocation = EmitAnnouncerSoundForTeamOnLocation;
+
+		(EmitAnnouncerSoundForTeamOnLocation as any) = function(soundName: string, team: DotaTeam, location: Vector, source?: PlayerID): void {
+			const soundOwnerID = source ?? -1;
+			return valve_emitannouncersoundforteamonlocation(GetSoundForPlayerID(soundName, soundOwnerID), team, location);
+		}
+
+		const valve_emitglobalsound = EmitGlobalSound;
+
+		(EmitGlobalSound as any) = function(soundName: string, source?: PlayerID): void {
+			const soundOwnerID = source ?? -1;
+			return valve_emitglobalsound(GetSoundForPlayerID(soundName, soundOwnerID));
+		}
+
+		const valve_emitsoundon = EmitSoundOn;
+
+		(EmitSoundOn as any) = function(soundName: string, entity: CBaseEntity, source?: PlayerID): void {
+			const soundOwnerID = source != undefined ? source : entity.IsBaseNPC() ? entity.GetPlayerOwnerID() : -1;
+			return valve_emitsoundon(GetSoundForPlayerID(soundName, soundOwnerID), entity);
+		}
+
+		const valve_emitsoundonclient = EmitSoundOnClient;
+
+		(EmitSoundOnClient as any) = function(soundName: string, player: CDOTAPlayerController, source?: PlayerID): void {
+			const soundOwnerID = source ?? player.GetPlayerID();
+			return valve_emitsoundonclient(GetSoundForPlayerID(soundName, soundOwnerID), player);
+		}
+
+		const valve_emitsoundonentityforplayer = EmitSoundOnEntityForPlayer;
+
+		(EmitSoundOnEntityForPlayer as any) = function(soundName: string, entity: CBaseEntity, playerID: PlayerID, source?: PlayerID): void {
+			const soundOwnerID = source ?? playerID;
+			return valve_emitsoundonentityforplayer(GetSoundForPlayerID(soundName, soundOwnerID), entity, playerID);
+		}
+
+		const valve_emitsoundonlocationforallies = EmitSoundOnLocationForAllies;
+
+		(EmitSoundOnLocationForAllies as any) = function(location: Vector, soundName: string, caster: CBaseEntity, source?: PlayerID): void {
+			const soundOwnerID = source != undefined ? source : caster.IsBaseNPC() ? caster.GetPlayerOwnerID() : -1;
+			return valve_emitsoundonlocationforallies(location, GetSoundForPlayerID(soundName, soundOwnerID), caster);
+		}
+
+		const valve_emitsoundonlocationforplayer = EmitSoundOnLocationForPlayer;
+
+		(EmitSoundOnLocationForPlayer as any) = function(soundName: string, location: Vector, playerID: PlayerID, source?: PlayerID): void {
+			const soundOwnerID = source ?? playerID;
+			return valve_emitsoundonlocationforplayer(GetSoundForPlayerID(soundName, soundOwnerID), location, playerID);
+		}
+
+		const valve_emitsoundonlocationwithcaster = EmitSoundOnLocationWithCaster;
+
+		(EmitSoundOnLocationWithCaster as any) = function(location: Vector, soundName: string, caster: CDOTA_BaseNPC, source?: PlayerID): void {
+			const soundOwnerID = source ?? caster.GetPlayerOwnerID();
+			return valve_emitsoundonlocationwithcaster(location, GetSoundForPlayerID(soundName, soundOwnerID), caster);
+		}
+
+		const valve_startsoundevent = StartSoundEvent;
+
+		(StartSoundEvent as any) = function(soundName: string, entity: CBaseEntity, source?: PlayerID): void {
+			const soundOwnerID = source != undefined ? source : entity.IsBaseNPC() ? entity.GetPlayerOwnerID() : -1;
+			return valve_startsoundevent(GetSoundForPlayerID(soundName, soundOwnerID), entity);
+		}
+
+		const valve_startsoundeventfromposition = StartSoundEventFromPosition;
+
+		(StartSoundEventFromPosition as any) = function(soundName: string, position: Vector, source?: PlayerID): void {
+			const soundOwnerID = source ?? -1;
+			return valve_startsoundeventfromposition(GetSoundForPlayerID(soundName, soundOwnerID), position);
+		}
+
+		const valve_startsoundeventfrompositionreliable = StartSoundEventFromPositionReliable;
+
+		(StartSoundEventFromPositionReliable as any) = function(soundName: string, position: Vector, source?: PlayerID): void {
+			const soundOwnerID = source ?? -1;
+			return valve_startsoundeventfrompositionreliable(GetSoundForPlayerID(soundName, soundOwnerID), position);
+		}
+
+		const valve_startsoundeventfrompositionunreliable = StartSoundEventFromPositionUnreliable;
+
+		(StartSoundEventFromPositionUnreliable as any) = function(soundName: string, position: Vector, source?: PlayerID): void {
+			const soundOwnerID = source ?? -1;
+			return valve_startsoundeventfrompositionunreliable(GetSoundForPlayerID(soundName, soundOwnerID), position);
+		}
+
+		const valve_startsoundeventreliable = StartSoundEventReliable;
+
+		(StartSoundEventReliable as any) = function(soundName: string, entity: CBaseEntity, source?: PlayerID): void {
+			const soundOwnerID = source != undefined ? source : entity.IsBaseNPC() ? entity.GetPlayerOwnerID() : -1;
+			return valve_startsoundeventreliable(GetSoundForPlayerID(soundName, soundOwnerID), entity);
+		}
+
+		const valve_startsoundeventunreliable = StartSoundEventUnreliable;
+
+		(StartSoundEventUnreliable as any) = function(soundName: string, entity: CBaseEntity, source?: PlayerID): void {
+			const soundOwnerID = source != undefined ? source : entity.IsBaseNPC() ? entity.GetPlayerOwnerID() : -1;
+			return valve_startsoundeventunreliable(GetSoundForPlayerID(soundName, soundOwnerID), entity);
+		}
+
+		const valve_stopglobalsound = StopGlobalSound;
+
+		(StopGlobalSound as any) = function(soundName: string, source?: PlayerID): void {
+			const soundOwnerID = source ?? -1;
+			for (const possible_sound of GetPossibleSounds(soundName, soundOwnerID)) {
+				valve_stopglobalsound(possible_sound);
+			}
+			return valve_stopglobalsound(soundName);
+		}
+
+		const valve_stopsoundevent = StopSoundEvent;
+
+		(StopSoundEvent as any) = function(soundName: string, entity: CBaseEntity, source?: PlayerID): void {
+			const soundOwnerID = source != undefined ? source : entity.IsBaseNPC() ? entity.GetPlayerOwnerID() : -1;
+			for (const possible_sound of GetPossibleSounds(soundName, soundOwnerID)) {
+				valve_stopsoundevent(possible_sound, entity);
+			}
+			return valve_stopsoundevent(soundName, entity);
+		}
+
+		const valve_stopsoundon = StopSoundOn;
+
+		(StopSoundOn as any) = function(soundName: string, entity: CBaseEntity, source?: PlayerID): void {
+			const soundOwnerID = source != undefined ? source : entity.IsBaseNPC() ? entity.GetPlayerOwnerID() : -1;
+			for (const possible_sound of GetPossibleSounds(soundName, soundOwnerID)) {
+				valve_stopsoundon(possible_sound, entity);
+			}
+			return valve_stopsoundon(soundName, entity);
+		}
 	}
 
 	public PostInit(): void {
@@ -645,6 +830,20 @@ export class Cosmetic {
 		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
 		for (const modifier of modifiers) {
 			Object.assign(replacements, modifier.particle_replacements);
+		}
+		return replacements;
+	}
+
+	public GetSoundReplacements(playerID: PlayerID): SoundReplacements {
+		const replacements : SoundReplacements = {};
+		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
+		if (!IsValidEntity(hero)) {
+			return replacements;
+		}
+		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
+		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
+		for (const modifier of modifiers) {
+			Object.assign(replacements, modifier.sound_replacements);
 		}
 		return replacements;
 	}

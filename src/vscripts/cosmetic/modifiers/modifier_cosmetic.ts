@@ -2,14 +2,22 @@ import { registerModifier } from "../../lib/dota_ts_adapter";
 import { ModifierCosmeticBase, params } from "./modifier_cosmetic_base";
 
 import { modifier_cosmetic_wearable_ts } from "./modifier_cosmetic_wearable";
+import { modifier_cosmetic_ranged_projectile_ts } from "./modifier_cosmetic_ranged_projectile";
 
 
 @registerModifier()
 export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 	hEntity?: CDOTA_BaseNPC;
 	hEntityModifier?: modifier_cosmetic_wearable_ts;
-	particle_replacements: ParticleReplacements = {};
+
 	persona?: number;
+	healthbar_offset? : number;
+	ranged_projectile? : string;
+
+	unit_models : UnitModelsReplacements = {};
+	wearable_models : WearableModelsReplacements = {};
+	particle_replacements: ParticleReplacements = {};
+	sound_replacements: SoundReplacements = {};
 
 	GetAttributes(): ModifierAttribute {
 		return ModifierAttribute.PERMANENT + ModifierAttribute.MULTIPLE;
@@ -86,6 +94,8 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 					}
 				} else if (asset["type"] == "persona") {
 					this.persona = asset["persona"];
+				} else if (asset["type"] == "model") {
+					this.wearable_models[asset["asset"]] = {"model": asset["modifier"]};
 				} else if (asset["type"] == "particle") {
 					const [original_particle, modified_particle] = [asset["asset"], asset["modifier"]];
 					if (original_particle != undefined && modified_particle != undefined) {
@@ -94,6 +104,8 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 							this.ranged_projectile = modified_particle;
 						}
 					}
+				} else if (asset["type"] == "sound") {
+					this.sound_replacements[asset["asset"]] = asset["modifier"];
 				}
 			}
 		}
@@ -125,11 +137,65 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 		}
 	}
 
+	SpecialBehaviors(): boolean {
+		const special_behaviors = super.SpecialBehaviors();
+		for (const mod of (this.parent.FindAllModifiersByName(this.GetName()) as modifier_cosmetic_ts[])) {
+			const wearable = mod.hEntityModifier;
+			if (wearable != undefined) {
+				const wearable_item_id = wearable.kv!.item_id;
+				const behaviors = GameRules.Cosmetic.behaviors_json[wearable_item_id.toString()];
+				if (behaviors != undefined && behaviors["parent_style"] == this.kv!.item_id) {
+					if (this.style != wearable.special_style) {
+						wearable.ResetVisuals();
+						wearable.ReadVisuals((GameRules.Cosmetic.items[wearable_item_id] as Item).visuals);
+						wearable.SpecialBehaviors();
+						wearable.ApplyVisuals();
+					}
+				}
+			}
+		}
+		return special_behaviors;
+	}
+
 	ApplyVisuals(): void {
 		super.ApplyVisuals();
 
+		if (!IsValidEntity(this.parent)) {
+			this.hEntityModifier!.ApplyVisuals();
+			return;
+		}
+
+		const healthbar_offset : number | undefined = this.GetSharedValue("healthbar_offset");
+		this.parent.SetHealthBarOffsetOverride(healthbar_offset ?? this.parent.GetBaseHealthBarOffset());
+
+		const ranged_projectile : string | undefined = this.GetSharedValue("ranged_projectile");
+		if (ranged_projectile != undefined) {
+			modifier_cosmetic_ranged_projectile_ts.apply(this.parent, this.parent, undefined, {"ranged_projectile": ranged_projectile});
+		} else {
+			this.parent.RemoveModifierByName(modifier_cosmetic_ranged_projectile_ts.name);
+		}
+
 		this.hEntityModifier!.ApplyVisuals();
+
+		for (const mod of (this.parent.FindAllModifiersByName(this.GetName()) as modifier_cosmetic_ts[])) {
+			const wearable = mod.hEntityModifier;
+			if (wearable != undefined) {
+				if (this.wearable_models[wearable.model] != undefined) {
+					wearable.ApplyVisuals();
+				}
+			}
+		}
 	}
+
+	ResetVisuals(): void {
+		delete this.healthbar_offset;
+		this.unit_models = {};
+		this.wearable_models = {};
+		this.sound_replacements = {};
+		this.particle_replacements = {};
+
+		super.ResetVisuals();
+	};
 
 	OnDestroy(): void {
 		if (!IsServer()) {

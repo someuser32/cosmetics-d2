@@ -3,7 +3,6 @@ import { BaseModifier } from "../../addon_init";
 
 import { modifier_cosmetic_model_ts } from "./modifier_cosmetic_model";
 import { modifier_cosmetic_activity_ts } from "./modifier_cosmetic_activity";
-import { modifier_cosmetic_ranged_projectile_ts } from "./modifier_cosmetic_ranged_projectile";
 
 export declare type params = {
 	style?: number,
@@ -13,18 +12,16 @@ export declare type params = {
 
 export class ModifierCosmeticBase extends BaseModifier {
 	kv? : params;
+
 	caster : CDOTA_BaseNPC = this.GetCaster()!;
 	parent : CDOTA_BaseNPC = this.GetParent();
+
 	style : number = -1;
 	special_style? : number;
-
 	model? : string;
 	model_skin? : number;
 	model_bodygroups : SpecialBehaviorModelInfo["bodygroups"] = {};
 	activity? : string;
-	healthbar_offset? : number;
-	ranged_projectile? : string;
-	unit_models : UnitModelsReplacements = {};
 
 	IsHidden(): boolean {
 		return true;
@@ -116,20 +113,11 @@ export class ModifierCosmeticBase extends BaseModifier {
 		if (!IsValidEntity(this.parent)) {
 			return;
 		}
-		const healthbar_offset : number | undefined = this.GetSharedValue("healthbar_offset");
-		this.parent.SetHealthBarOffsetOverride(healthbar_offset ?? this.parent.GetBaseHealthBarOffset());
-
 		const [model, model_source] : [string, ModifierCosmeticBase] | [] = this.GetSharedValueAndSource("model");
 		if (model != undefined) {
 			modifier_cosmetic_model_ts.apply(this.parent, this.parent, undefined, {"model": model});
-
-			// const model_source_style : number | undefined = GetAttribute(model_source!, "style");
-			// if (model_source_style != undefined) {
-			// 	this.parent.SetMaterialGroup(model_source_style.toString());
-			// }
 		} else {
 			this.parent.RemoveModifierByName(modifier_cosmetic_model_ts.name);
-			// this.parent.SetMaterialGroup("default");
 		}
 
 		const model_skin : number | undefined = this.GetSharedValue("model_skin");
@@ -149,20 +137,11 @@ export class ModifierCosmeticBase extends BaseModifier {
 		} else {
 			this.parent.RemoveModifierByName(modifier_cosmetic_activity_ts.name);
 		}
-
-		const ranged_projectile : string | undefined = this.GetSharedValue("ranged_projectile");
-		if (ranged_projectile != undefined) {
-			modifier_cosmetic_ranged_projectile_ts.apply(this.parent, this.parent, undefined, {"ranged_projectile": ranged_projectile});
-		} else {
-			this.parent.RemoveModifierByName(modifier_cosmetic_ranged_projectile_ts.name);
-		}
 	}
 
 	ResetVisuals(): void {
 		delete this.model;
 		delete this.model_skin;
-		delete this.healthbar_offset;
-		this.unit_models = {};
 
 		if (this.model_bodygroups != undefined) {
 			for (const [bodygroup, value] of Object.entries(this.model_bodygroups)) {

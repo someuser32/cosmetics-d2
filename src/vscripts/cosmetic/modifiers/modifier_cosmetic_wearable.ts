@@ -20,9 +20,10 @@ interface ParticleInfo {
 @registerModifier()
 export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 	caster : CDOTA_BaseNPC = this.GetCaster()!;
+
+	model : string = "";
 	particles : {[particle_name : string] : ParticleID} = {};
 	particle_infos : {[particle_name : string] : ParticleInfo} = {};
-	model : string = "";
 
 	CheckState(): Partial<Record<ModifierState, boolean>> {
 		const states : Partial<Record<ModifierState, boolean>> = {[ModifierState.INVULNERABLE]: true, [ModifierState.NO_HEALTH_BAR]: true, [ModifierState.OUT_OF_GAME]: true, [ModifierState.MAGIC_IMMUNE]: true, [ModifierState.NO_UNIT_COLLISION]: true, [ModifierState.NOT_ON_MINIMAP]: true, [ModifierState.UNSELECTABLE]: true};
@@ -186,13 +187,12 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 	}
 
 	ApplyVisuals(): void {
-		const model = this.model;
-		this.parent.SetModel(model);
-		this.parent.SetOriginalModel(model);
+		const model_info : WearableModelReplacement = Object.assign({"model": this.model, "skin": this.model_skin}, this.GetUnionParentValue("wearable_models")![this.model] ?? {});
+		this.parent.SetModel(model_info["model"]);
+		this.parent.SetOriginalModel(model_info["model"]);
 
-		const model_skin = this.model_skin;
-		this.parent.SetSkin(model_skin ?? 0);
-		this.parent.SetMaterialGroup(model_skin != undefined ? model_skin.toString() : "default");
+		this.parent.SetSkin(model_info["skin"] ?? 0);
+		this.parent.SetMaterialGroup(model_info["skin"] != undefined ? model_info["skin"].toString() : "default");
 
 		const model_bodygroups = this.GetUnionValue("model_bodygroups") as SpecialBehaviorModelInfo["bodygroups"];
 		if (model_bodygroups != undefined) {
@@ -214,6 +214,10 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 				}
 				const cp_owner = control_point_info["owner"] == "parent" ? this.caster : this.parent;
 				ParticleManager.SetParticleControlEnt(fx, parseInt(control_point), cp_owner, control_point_info["pattach"], control_point_info["attach"], vector, true);
+			}
+			if (this.particles[particle_name] != undefined) {
+				ParticleManager.DestroyParticle(this.particles[particle_name], true);
+				ParticleManager.ReleaseParticleIndex(this.particles[particle_name]);
 			}
 			this.particles[particle_name] = fx;
 		}
@@ -264,12 +268,59 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 		UTIL_Remove(this.parent);
 	}
 
+	GetSharedParentValueAndSource(value: string, ignore_self?: boolean): [any, ModifierCosmeticBase] | [] {
+		if (!IsValidEntity(this.parent)) {
+			return [];
+		}
+		const mods = this.caster.FindAllModifiersByName("modifier_cosmetic_ts") as ModifierCosmeticBase[];
+		mods.sort((a: ModifierCosmeticBase, b: ModifierCosmeticBase) => (b.GetPriority() - a.GetPriority() || a.GetCreationTime() - b.GetCreationTime()));
+		for (const mod of mods) {
+			if (ignore_self && mod == this) {
+				continue;
+			}
+			const attribute = GetAttribute(mod, value);
+			if (attribute != undefined) {
+				return [attribute, mod];
+			}
+		}
+		return [];
+	}
+
+	GetSharedParentValue(value: string, ignore_self?: boolean): any | undefined {
+		return this.GetSharedParentValueAndSource(value, ignore_self)[0];
+	}
+
+	GetUnionParentValue(value: string, ignore_self?: boolean): {[key : string | number | symbol] : any} | undefined {
+		if (!IsValidEntity(this.parent)) {
+			return;
+		}
+		const mods = this.caster.FindAllModifiersByName("modifier_cosmetic_ts") as ModifierCosmeticBase[];
+		mods.sort((a: ModifierCosmeticBase, b: ModifierCosmeticBase) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
+		let result : {[key : string | number | symbol] : any} | undefined = undefined;
+		for (const mod of mods) {
+			if (ignore_self && mod == this) {
+				continue;
+			}
+			const attribute = GetAttribute(mod, value);
+			if (attribute != undefined) {
+				if (attribute instanceof Object) {
+					if (result == undefined) {
+						result = Object.assign({}, attribute);
+					} else if (typeof attribute == typeof result) {
+						for (const [key, value] of Object.entries(attribute)) {
+							result[key as string | number | symbol] = value;
+						}
+					}
+				}
+			}
+		}
+		return result;
+	}
+
 	OnDeath(event: ModifierInstanceEvent): void {
 		if (!IsServer()) {
 			return;
 		}
-
-		print("on death")
 
 		if (event.unit != this.caster) {
 			return;
@@ -283,13 +334,11 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 			return;
 		}
 
-		print("on death completed")
+		if (event.unit != this.caster) {
+			return;
+		}
 
-		// if (event.unit != this.caster) {
-		// 	return;
-		// }
-
-		// this.parent.AddNoDraw();
+		this.parent.AddNoDraw();
 	}
 
 	OnRespawn(event: ModifierUnitEvent): void {

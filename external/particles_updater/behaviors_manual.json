@@ -116,5 +116,76 @@
 				}
 			}
 		}
+	},
+	"12326": {
+		"styles": {
+			"1": {
+				"wearable": {
+					"bodygroups": {
+						"arcana": 2
+					}
+				}
+			}
+		},
+		"parent_style": 13806
+	},
+	"13806": {
+		"styles": {
+			"1": {
+				"wearable": {
+					"bodygroups": {
+						"arcana": 2
+					}
+				}
+			}
+		}
+	},
+	"13807": {
+		"styles": {
+			"1": {
+				"wearable": {
+					"bodygroups": {
+						"arcana": 2
+					}
+				}
+			}
+		},
+		"parent_style": 13806
+	},
+	"13808": {
+		"styles": {
+			"1": {
+				"wearable": {
+					"bodygroups": {
+						"arcana": 2
+					}
+				}
+			}
+		},
+		"parent_style": 13806
+	},
+	"13804": {
+		"styles": {
+			"1": {
+				"wearable": {
+					"bodygroups": {
+						"arcana": 2
+					}
+				}
+			}
+		},
+		"parent_style": 13806
+	},
+	"13805": {
+		"styles": {
+			"1": {
+				"wearable": {
+					"bodygroups": {
+						"arcana": 2
+					}
+				}
+			}
+		},
+		"parent_style": 13806
 	}
 }

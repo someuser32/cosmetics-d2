@@ -100,9 +100,22 @@ interface ParticleReplacements {
 }
 
 interface UnitModelReplacement {
-	model : string
+	model: string
 }
 
 interface UnitModelsReplacements {
-	[unit_name : string] : UnitModelReplacement
+	[unit_name: string]: UnitModelReplacement
+}
+
+interface WearableModelReplacement {
+	model: string,
+	skin?: number
+}
+
+interface WearableModelsReplacements {
+	[model_name: string]: WearableModelReplacement
+}
+
+interface SoundReplacements {
+	[sound_name: string]: string
 }
