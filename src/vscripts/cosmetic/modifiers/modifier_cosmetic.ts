@@ -18,9 +18,9 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 	wearable_models : WearableModelsReplacements = {};
 	particle_replacements: ParticleReplacements = {};
 	sound_replacements: SoundReplacements = {};
-	hero_icons: CosmeticHeroIconReplacements = {};
-	ability_icons: CosmeticAbilityIconReplacements = {};
-	item_icons: CosmeticItemIconReplacements = {};
+	hero_icons: HeroIconReplacements = {};
+	ability_icons: AbilityIconReplacements = {};
+	item_icons: ItemIconReplacements = {};
 
 	GetAttributes(): ModifierAttribute {
 		return ModifierAttribute.PERMANENT + ModifierAttribute.MULTIPLE;
@@ -98,23 +98,23 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 				} else if (asset["type"] == "persona") {
 					this.persona = asset["persona"];
 				} else if (asset["type"] == "model") {
-					this.wearable_models[asset["asset"]] = {"model": asset["modifier"]};
+					this.wearable_models[asset["asset"]] = {"model": asset["modifier"], "priority": asset["minimum_priority"] ?? 0};
 				} else if (asset["type"] == "particle") {
 					const [original_particle, modified_particle] = [asset["asset"], asset["modifier"]];
 					if (original_particle != undefined && modified_particle != undefined) {
-						this.particle_replacements[original_particle] = {"name": modified_particle};
+						this.particle_replacements[original_particle] = {"name": modified_particle, "priority": asset["minimum_priority"] ?? 0};
 						if (original_particle == this.parent.GetRangedProjectileName()) {
 							this.ranged_projectile = modified_particle;
 						}
 					}
 				} else if (asset["type"] == "sound") {
-					this.sound_replacements[asset["asset"]] = asset["modifier"];
+					this.sound_replacements[asset["asset"]] = {"name": asset["modifier"], "priority": asset["minimum_priority"] ?? 0};
 				} else if (asset["type"] == "ability_icon") {
-					this.ability_icons[asset["asset"]] = asset["modifier"];
+					this.ability_icons[asset["asset"]] = {"name": asset["modifier"], "priority": asset["minimum_priority"] ?? 0};
 				} else if (asset["type"] == "inventory_icon") {
-					this.item_icons[asset["asset"]] = asset["modifier"];
+					this.item_icons[asset["asset"]] = {"name": asset["modifier"], "priority": asset["minimum_priority"] ?? 0};
 				} else if (asset["type"] == "icon_replacement_hero") {
-					this.hero_icons[asset["asset"]] = asset["modifier"];
+					this.hero_icons[asset["asset"]] = {"name": asset["modifier"], "priority": asset["minimum_priority"] ?? 0};
 				}
 			}
 		}

@@ -35,8 +35,26 @@ declare global {
 	}
 
 	interface CBaseEntity {
-		EmitSound(soundName: string, source?: PlayerID): void;
+		EmitSound(soundName: string, source?: PlayerID): void,
+		EmitSoundParams(soundName: string, pitch: number, volume: number, delay: number, source?: PlayerID): void,
+		StopSound(soundName: string, source?: PlayerID): void
 	}
+
+	function EmitSoundOn(soundName: string, entity: CBaseEntity, source?: PlayerID): void;
+	function EmitSoundOnClient(soundName: string, player: CDOTAPlayerController, source?: PlayerID): void;
+	function EmitSoundOnEntityForPlayer(soundName: string, entity: CBaseEntity, playerID: PlayerID, source?: PlayerID): void;
+	function EmitSoundOnLocationForAllies(location: Vector, soundName: string, caster: CBaseEntity, source?: PlayerID): void;
+	function EmitSoundOnLocationForPlayer(soundName: string, location: Vector, playerID: PlayerID, source?: PlayerID): void;
+	function EmitSoundOnLocationWithCaster(location: Vector, soundName: string, caster: CDOTA_BaseNPC, source?: PlayerID): void;
+	function StartSoundEvent(soundName: string, entity: CBaseEntity, source?: PlayerID): void;
+	function StartSoundEventFromPosition(soundName: string, position: Vector, source?: PlayerID): void;
+	function StartSoundEventFromPositionReliable(soundName: string, position: Vector, source?: PlayerID): void;
+	function StartSoundEventFromPositionUnreliable(soundName: string, position: Vector, source?: PlayerID): void;
+	function StartSoundEventReliable(soundName: string, entity: CBaseEntity, source?: PlayerID): void;
+	function StartSoundEventUnreliable(soundName: string, entity: CBaseEntity, source?: PlayerID): void;
+	function StopGlobalSound(soundName: string, source?: PlayerID): void;
+	function StopSoundEvent(soundName: string, entity: CBaseEntity, source?: PlayerID): void;
+	function StopSoundOn(soundName: string, entity: CBaseEntity, source?: PlayerID): void;
 }
 
 
@@ -471,19 +489,19 @@ export class Cosmetic {
 
 	public GetEquippedItems(playerID: PlayerID): CosmeticEquippedItems {
 		if (this.equipped_items[playerID] == undefined) {
-			return {} as CosmeticEquippedItems;
+			return {};
 		}
 		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
 		if (!IsValidEntity(hero)) {
-			return {} as CosmeticEquippedItems;
+			return {};
 		}
-		return this.equipped_items[playerID][hero.GetUnitName()] ?? {} as CosmeticEquippedItems;
+		return this.equipped_items[playerID][hero.GetUnitName()] ?? {};
 	}
 
 	public GetAvaiableItems(playerID: PlayerID): CosmeticHeroItems {
 		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
 		if (!IsValidEntity(hero)) {
-			return {} as CosmeticHeroItems;
+			return {};
 		}
 		const heroname = hero.GetUnitName();
 		const items : CosmeticHeroItems = {};
@@ -832,28 +850,44 @@ export class Cosmetic {
 		const replacements : ParticleReplacements = {};
 		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
 		if (!IsValidEntity(hero)) {
-			return replacements;
+			return {};
 		}
 		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
 		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
 		for (const modifier of modifiers) {
-			Object.assign(replacements, modifier.particle_replacements);
+			for (const [asset, asset_modifier] of Object.entries(modifier.particle_replacements)) {
+				if (replacements[asset] == undefined) {
+					replacements[asset] = asset_modifier;
+				} else {
+					if ((replacements[asset]["priority"] ?? 0) <= (asset_modifier["priority"] ?? 0)) {
+						replacements[asset] = asset_modifier;
+					}
+				}
+			}
 		}
-		return replacements;
+		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, ObjectUtils.filter(modifier, ([modifier_key, modifier_value]) => (modifier_key != "priority"))])));
 	}
 
-	public GetSoundReplacements(playerID: PlayerID): SoundReplacements {
+	public GetSoundReplacements(playerID: PlayerID): ActualSoundReplacements {
 		const replacements : SoundReplacements = {};
 		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
 		if (!IsValidEntity(hero)) {
-			return replacements;
+			return {};
 		}
 		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
 		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
 		for (const modifier of modifiers) {
-			Object.assign(replacements, modifier.sound_replacements);
+			for (const [asset, asset_modifier] of Object.entries(modifier.sound_replacements)) {
+				if (replacements[asset] == undefined) {
+					replacements[asset] = asset_modifier;
+				} else {
+					if ((replacements[asset]["priority"] ?? 0) <= (asset_modifier["priority"] ?? 0)) {
+						replacements[asset] = asset_modifier;
+					}
+				}
+			}
 		}
-		return replacements;
+		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
 	}
 
 	public GetUnitModelReplacements(playerID: PlayerID): UnitModelsReplacements {
@@ -865,50 +899,82 @@ export class Cosmetic {
 		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
 		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
 		for (const modifier of modifiers) {
-			Object.assign(replacements, modifier.unit_models);
+			for (const [asset, asset_modifier] of Object.entries(modifier.unit_models)) {
+				if (replacements[asset] == undefined) {
+					replacements[asset] = asset_modifier;
+				} else {
+					if ((replacements[asset]["priority"] ?? 0) <= (asset_modifier["priority"] ?? 0)) {
+						replacements[asset] = asset_modifier;
+					}
+				}
+			}
 		}
-		return replacements;
+		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, ObjectUtils.filter(modifier, ([modifier_key, modifier_value]) => (modifier_key != "priority"))])));
 	}
 
 	public GetHeroIconReplacements(playerID: PlayerID): CosmeticHeroIconReplacements {
-		const replacements : CosmeticHeroIconReplacements = {};
+		const replacements : HeroIconReplacements = {};
 		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
 		if (!IsValidEntity(hero)) {
-			return replacements;
+			return {};
 		}
 		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
 		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
 		for (const modifier of modifiers) {
-			Object.assign(replacements, modifier.hero_icons);
+			for (const [asset, asset_modifier] of Object.entries(modifier.hero_icons)) {
+				if (replacements[asset] == undefined) {
+					replacements[asset] = asset_modifier;
+				} else {
+					if ((replacements[asset]["priority"] ?? 0) <= (asset_modifier["priority"] ?? 0)) {
+						replacements[asset] = asset_modifier;
+					}
+				}
+			}
 		}
-		return replacements;
+		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
 	}
 
 	public GetAbilityIconReplacements(playerID: PlayerID): CosmeticAbilityIconReplacements {
-		const replacements : CosmeticAbilityIconReplacements = {};
+		const replacements : AbilityIconReplacements = {};
 		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
 		if (!IsValidEntity(hero)) {
-			return replacements;
+			return {};
 		}
 		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
 		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
 		for (const modifier of modifiers) {
-			Object.assign(replacements, modifier.ability_icons);
+			for (const [asset, asset_modifier] of Object.entries(modifier.ability_icons)) {
+				if (replacements[asset] == undefined) {
+					replacements[asset] = asset_modifier;
+				} else {
+					if ((replacements[asset]["priority"] ?? 0) <= (asset_modifier["priority"] ?? 0)) {
+						replacements[asset] = asset_modifier;
+					}
+				}
+			}
 		}
-		return replacements;
+		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
 	}
 
 	public GetItemIconReplacements(playerID: PlayerID): CosmeticItemIconReplacements {
-		const replacements : CosmeticItemIconReplacements = {};
+		const replacements : ItemIconReplacements = {};
 		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
 		if (!IsValidEntity(hero)) {
-			return replacements;
+			return {};
 		}
 		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
 		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
 		for (const modifier of modifiers) {
-			Object.assign(replacements, modifier.item_icons);
+			for (const [asset, asset_modifier] of Object.entries(modifier.item_icons)) {
+				if (replacements[asset] == undefined) {
+					replacements[asset] = asset_modifier;
+				} else {
+					if ((replacements[asset]["priority"] ?? 0) <= (asset_modifier["priority"] ?? 0)) {
+						replacements[asset] = asset_modifier;
+					}
+				}
+			}
 		}
-		return replacements;
+		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
 	}
 }
