@@ -39,51 +39,52 @@ interface CosmeticItemIconReplacements {
 }
 
 interface CosmeticSlotInfo {
-    index : number,
-    text : string,
-    visible : 0 | 1
+    index: number,
+    text: string,
+    visible: 0 | 1
 }
 
 interface CosmeticSlots {
-    [slot_name : string] : CosmeticSlotInfo
+    [slot_name: string]: CosmeticSlotInfo
 }
 
 interface CustomGameEventDeclarations {
-    cosmetic_request_items : {},
-    cosmetic_respond_items : {
-        items : CosmeticHeroItems
+    cosmetic_request_items: {},
+    cosmetic_respond_items: {
+        items: CosmeticHeroItems
     },
-    cosmetic_request_equipped_items : {},
-    cosmetic_respond_equipped_items : {
-        items : CosmeticEquippedItems
+    cosmetic_request_equipped_items: {},
+    cosmetic_respond_equipped_items: {
+        items: CosmeticEquippedItems
     },
-    cosmetic_equip_item : {
-        item : number
-        style : number
+    cosmetic_equip_item: {
+        item: number
+        style: number
     }
 }
 
 interface CosmeticHeroItem {
-    name : string,
-    slot : string,
-    icon : string,
-    rarity : string,
-    styles : number,
-    type : string,
-    avaiable : 0 | 1
+    name: string,
+    slot: string,
+    icon: string,
+    rarity: string,
+    styles: number,
+    type: string,
+    avaiable: 0 | 1,
+    bundle?: {[index: number]: number}
 }
 
 interface CosmeticHeroItems {
-    [slot_name : string] : {
-        [item_id : string] : CosmeticHeroItem
+    [slot_name: string]: {
+        [item_id: string]: CosmeticHeroItem
     }
 }
 
 interface CosmeticEquippedItem {
-    item : number,
-    style : number
+    item: number,
+    style: number
 }
 
 interface CosmeticEquippedItems {
-    [slot_name : string] : CosmeticEquippedItem
+    [slot_name: string]: CosmeticEquippedItem
 }

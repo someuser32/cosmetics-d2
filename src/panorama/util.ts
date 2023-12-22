@@ -113,3 +113,12 @@ class ObjectUtils {
 		return Object.keys(obj).find((key) => (obj as any)[key] === value) as K | undefined;
 	}
 }
+
+class ArrayUtils {
+	constructor() {
+	}
+
+	static mostElement<V>(arr: Array<V>): V | undefined {
+		return arr.sort((a, b) => arr.filter((v) => (v === a)).length - arr.filter((v) => (v === b)).length).pop();
+	}
+}

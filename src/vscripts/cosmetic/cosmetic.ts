@@ -9,8 +9,8 @@
 // [x] hero icon replacement
 // [x] ability icon replacement
 // [x] item icon replacement
+// [x] bundles
 // [ ] color gems
-// [ ] bundles
 // [ ] taunts
 // [ ] voice
 // [ ] apply when equipped ability effect
@@ -420,7 +420,7 @@ export class Cosmetic {
 						const item_bundle = item["bundle"] != undefined ? Object.keys(item["bundle"]): [];
 						this.items[item_id] = {
 							"name": item_name,
-							"slot": item_slot,
+							"slot": "bundle",
 							"icon": item_icon,
 							"heroes": item_heroes,
 							"rarity": item_rarity,
@@ -508,7 +508,7 @@ export class Cosmetic {
 		for (const [slot, hero_items] of Object.entries(this.hero_items[heroname] || {})) {
 			items[slot] = {}
 			for (const [item_id, item] of Object.entries(hero_items)) {
-				items[slot][item_id] = Object.assign({"avaiable": 1}, ObjectUtils.filter(item, ([key, value]) => (["name", "slot", "icon", "rarity", "styles", "type"].includes(key as string))));
+				items[slot][item_id] = Object.assign({"avaiable": 1}, ObjectUtils.filter(item, ([key, value]) => (["name", "slot", "icon", "rarity", "styles", "type", "bundle"].includes(key as string))));
 			}
 		}
 		return items
@@ -536,7 +536,7 @@ export class Cosmetic {
 		if (event.item == undefined) {
 			return;
 		}
-		const item = this.items[event.item];
+		let item = this.items[event.item];
 		if (item == undefined) {
 			return;
 		}
@@ -546,6 +546,16 @@ export class Cosmetic {
 			return;
 		}
 		const heroname = hero.GetUnitName()
+
+		if (item["type"] == "bundle") {
+			item = item as Bundle;
+			const items = ObjectUtils.fromEntries(item["bundle"].filter((item_id) => type(item_id) == "number").map((item_id) => ([this.items[item_id as number]["slot"], item_id])));
+			const unused_slots = Object.keys(this.slots[heroname]["slots"]).filter((slot) => (!Object.keys(items).includes(slot)));
+			Object.values(items).map((item_id) => (this.EquipItem(Object.assign(Object.assign({}, event), {"item": item_id}))));
+			unused_slots.map((slot) => this.DefaultSlot(event.PlayerID, slot, false, true));
+			return;
+		}
+		item = item as Item;
 
 		if (this.equipped_items[event.PlayerID] == undefined) {
 			this.equipped_items[event.PlayerID] = {}
@@ -585,7 +595,7 @@ export class Cosmetic {
 
 	public _EquipItem(playerID: PlayerID, item_id: number, style: number, ignore_default_check?: boolean): boolean {
 		style = style - 1
-		const item = this.items[item_id] as Item;
+		let item = this.items[item_id];
 		if (item == undefined) {
 			return false;
 		}
@@ -594,6 +604,15 @@ export class Cosmetic {
 			return false;
 		}
 		const heroname = hero.GetUnitName();
+		if (item["type"] == "bundle") {
+			item = item as Bundle;
+			const items = ObjectUtils.fromEntries(item["bundle"].filter((item_id) => type(item_id) == "number").map((item_id) => ([this.items[item_id as number]["slot"], item_id])));
+			const unused_slots = Object.keys(this.slots[heroname]["slots"]).filter((slot) => (!Object.keys(items).includes(slot)));
+			const result = Object.values(items).map((item_id) => (this._EquipItem(playerID, item_id as number, style, ignore_default_check)));
+			unused_slots.map((slot) => this.DefaultSlot(playerID, slot, false, true));
+			return result.every((v) => v);
+		}
+		item = item as Item;
 		const modifier_data = {"item_id": item_id, "model": item.model, "style": style, "name": item.name};
 		let modifier = this.GetModifierForSlot(hero, item.slot);
 		if (modifier != undefined) {
@@ -680,19 +699,31 @@ export class Cosmetic {
 		}
 	}
 
-	public DefaultSlot(playerID: PlayerID, slot: string, ignore_default_check?: boolean): void {
+	public GetDefaultItemForSlot(playerID: PlayerID, slot: string): number | undefined {
 		const hero = PlayerResource.GetSelectedHeroEntity(playerID)
 		if (!IsValidEntity(hero)) {
-			return;
+			return undefined;
 		}
 		const hero_items = this.hero_items[hero.GetUnitName()][slot];
 		if (hero_items != undefined) {
 			for (const [item_id, item] of Object.entries(hero_items)) {
 				if (item.type == "default_item") {
-					this._EquipItem(playerID, parseInt(item_id), 1, ignore_default_check);
-					return;
+					return parseInt(item_id);
 				}
 			}
+		}
+		return undefined
+	}
+
+	public DefaultSlot(playerID: PlayerID, slot: string, ignore_default_check?: boolean, save?: boolean): void {
+		const item = this.GetDefaultItemForSlot(playerID, slot);
+		if (item != undefined) {
+			if (!save) {
+				this._EquipItem(playerID, item, 1, ignore_default_check);
+			} else {
+				this.EquipItem({"PlayerID": playerID, "item": item, "style": 1});
+			}
+			return;
 		}
 		this.RemoveSlot(playerID, slot);
 	}

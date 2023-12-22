@@ -252,6 +252,18 @@ class Cosmetic {
 		this.ItemsLoad();
 	}
 
+	public GetSlotForItem(item_id: number): string | undefined {
+		if (this.slots_server == undefined || this.items_server == undefined) {
+			return undefined;
+		}
+		for (const slot_name of Object.keys(this.slots_server)) {
+			if (this.items_server[slot_name][item_id] != undefined) {
+				return slot_name;
+			}
+		}
+		return undefined;
+	}
+
 	public GetEquippedItem(slot_name: string): number | undefined {
 		if (this.equipped_items_server == undefined) {
 			return undefined;
@@ -266,10 +278,43 @@ class Cosmetic {
 				const item = this.items_server[slot_name][item_id];
 				if (item["type"] == "default_item" && item["slot"] == slot_name) {
 					return parseInt(item_id);
+				} else if (item["type"] == "bundle" && item["slot"] == slot_name && this.slots_server != undefined && item["bundle"] != undefined) {
+					const bundle_slots = Object.keys(this.slots_server).filter((slot) => (Object.values(item["bundle"]!).some((item_id) => (this.items_server![slot] != undefined && this.items_server![slot][item_id] != undefined))));
+					const is_equipped = Object.keys(this.slots_server).every((slot) => {
+						if (slot == slot_name || this.items_server![slot] == undefined) {
+							return true;
+						}
+						const equipped_item = this.GetEquippedItem(slot);
+						if (equipped_item == undefined || this.items_server![slot][equipped_item] == undefined) {
+							return false;
+						}
+						if (bundle_slots.includes(slot)) {
+							return Object.values(item["bundle"]!).includes(equipped_item);
+						}
+						return this.items_server![slot][equipped_item]["type"] == "default_item";
+					});
+					if (is_equipped) {
+						return parseInt(item_id);
+					}
 				}
 			}
+		} else {
+			return this.equipped_items_server[slot_name]["item"];
 		}
-		return this.equipped_items_server[slot_name]["item"];
+		return undefined;
+	}
+
+	public GetEquippedItemStyle(slot_name: string): number {
+		const equipped_item_id = this.GetEquippedItem(slot_name);
+		if (equipped_item_id == undefined) {
+			return 1;
+		}
+		const equipped_item = this.items_server![slot_name][equipped_item_id];
+		if (equipped_item["type"] == "bundle" && equipped_item["bundle"] != undefined && this.slots_server != undefined) {
+			const bundle_styles = Object.values(equipped_item["bundle"]!).map((item_id) => (this.GetSlotForItem(item_id))).filter((slot) => (slot != undefined)).map((slot) => (this.GetEquippedItemStyle(slot!)));
+			return ArrayUtils.mostElement(bundle_styles) ?? 1;
+		}
+		return this.equipped_items_server != undefined && this.equipped_items_server[slot_name] != undefined ? this.equipped_items_server[slot_name]["style"] : 1;
 	}
 
 	public GetEquippedItems(): EquippedItems {
@@ -304,7 +349,7 @@ class Cosmetic {
 		if (data == null) {
 			return;
 		}
-		this.slots_server = ObjectUtils.fromEntries(Object.entries(data as Object).filter(([slot_name, slot_info]) => {
+		this.slots_server = ObjectUtils.fromEntries(Object.entries(Object.assign({"bundle": {"index": -1, "text": "#DOTA_HeroLoadout_FullSets", "visible": 1}}, data as Object)).filter(([slot_name, slot_info]) => {
 			return !slot_name.startsWith("ability_effects_");
 		}).sort(([slot_name_a, slot_info_a], [slot_name_b, slot_info_b]) => {
 			return slot_info_a["index"] - slot_info_b["index"];
@@ -354,7 +399,7 @@ class Cosmetic {
 				(ItemInfoPanel.FindChildTraverse("Status") as LabelPanel).text = "OWNED";
 			}
 			if (item["styles"] > 1) {
-				const selected_style = this.equipped_items_server != undefined && this.equipped_items_server[slot] != undefined ? this.equipped_items_server[slot]["style"] : 1;
+				const selected_style = this.GetEquippedItemStyle(slot);
 				for (let i=1; i<=item["styles"]; i++) {
 					$.CreatePanel("RadioButton", ItemInfoPanel.FindChildTraverse("StylesSelector")!, `${i}`, {"class": "Style", "group": "style", "selected": i==selected_style, "hittest": "true"});
 				}
@@ -397,8 +442,15 @@ class Cosmetic {
 					for (let j=0; j<this.rarities.length; j++) {
 						child.SetHasClass(`Rarity_${this.rarities[j]}`, equipped_item["rarity"] == this.rarities[j]);
 					}
-					const selected_style = this.equipped_items_server[slot] != undefined ? this.equipped_items_server[slot]["style"] : 1;
+					const selected_style = this.GetEquippedItemStyle(slot);
 					(child.FindChildTraverse("Econ")!.FindChildTraverse("MultiStyle")!.FindChildTraverse("Selected") as LabelPanel).text = `${selected_style}/${equipped_item["styles"]}`;
+				}
+			} else {
+				(child.FindChildTraverse("Econ")!.FindChildTraverse("Icon") as ImagePanel).SetImage("s2r://panorama/images/econ/default_no_item_png.vtex");
+				child.SetHasClass("NotDefault", false);
+				child.SetHasClass("MultiStyles", false);
+				for (let j=0; j<this.rarities.length; j++) {
+					child.SetHasClass(`Rarity_${this.rarities[j]}`, false);
 				}
 			}
 		}
