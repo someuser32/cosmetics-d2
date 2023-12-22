@@ -16,7 +16,7 @@ export class ModifierCosmeticBase extends BaseModifier {
 	caster : CDOTA_BaseNPC = this.GetCaster()!;
 	parent : CDOTA_BaseNPC = this.GetParent();
 
-	style : number = -1;
+	style : number = 0;
 	special_style? : number;
 	model? : string;
 	model_skin? : number;
@@ -47,7 +47,7 @@ export class ModifierCosmeticBase extends BaseModifier {
 			return;
 		}
 
-		this.style = kv.style ?? -1;
+		this.style = kv.style ?? 0;
 	}
 
 	OnRefresh(kv: params): void {

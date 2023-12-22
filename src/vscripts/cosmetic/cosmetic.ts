@@ -6,43 +6,14 @@
 // [x] unit model replacement
 // [x] sound replacement
 // [x] wearable model replacement
-// [ ] ability icon replacement
-// [ ] item icon replacement
-// [ ] hero icon replacement
+// [x] hero icon replacement
+// [x] ability icon replacement
+// [x] item icon replacement
 // [ ] color gems
 // [ ] bundles
 // [ ] taunts
 // [ ] voice
 // [ ] apply when equipped ability effect
-
-/*
-"asset_modifier"
-{
-	"type"		"ability_icon"
-	"asset"		"windrunner_shackleshot"
-	"modifier"		"windrunner_shackleshot_arcana"
-	"style"		"0"
-	"minimum_priority"		"1"
-}
-"alternate_icons"
-{
-	"0"
-	{
-		"icon_path"		"econ/items/windrunner/windrunner_arcana/wr_arcana_head"
-	}
-	"1"
-	{
-		"icon_path"		"econ/items/windrunner/windrunner_arcana/wr_arcana_head_style1"
-	}
-}
-"asset_modifier"
-{
-	"type"		"inventory_icon"
-	"asset"		"force_staff"
-	"modifier"		"force_staff_wr_arcana"
-	"style"		"0"
-}
-*/
 
 
 import "../lib/kvparser/kvparser";
@@ -568,9 +539,30 @@ export class Cosmetic {
 		if (!this._EquipItem(event.PlayerID, event.item, event.style ?? 1, false)) {
 			return;
 		}
-		this.equipped_items[event.PlayerID][heroname][item["slot"]] = {"item": event.item, "style": event.style ?? -1}
+		this.equipped_items[event.PlayerID][heroname][item["slot"]] = {"item": event.item, "style": event.style ?? 0}
 
 		this.RequestEquippedItems({"PlayerID": event.PlayerID});
+
+		const hero_icons_replacement = this.GetHeroIconReplacements(event.PlayerID);
+		const ability_icons_replacement = this.GetAbilityIconReplacements(event.PlayerID);
+		const item_icons_replacement = this.GetItemIconReplacements(event.PlayerID);
+		const data = CustomNetTables.GetTableValue("cosmetic", "replacements") ?? {};
+		const player_data : CosmeticReplacements = {};
+		if (Object.keys(hero_icons_replacement).length > 0) {
+			player_data["hero_icons"] = hero_icons_replacement
+		}
+		if (Object.keys(ability_icons_replacement).length > 0) {
+			player_data["ability_icons"] = ability_icons_replacement
+		}
+		if (Object.keys(item_icons_replacement).length > 0) {
+			player_data["item_icons"] = item_icons_replacement
+		}
+		if (Object.keys(player_data).length > 0) {
+			data[event.PlayerID.toString()] = player_data;
+		} else {
+			delete data[event.PlayerID.toString()];
+		}
+		CustomNetTables.SetTableValue("cosmetic", "replacements", data);
 	}
 
 	public _EquipItem(playerID: PlayerID, item_id: number, style: number, ignore_default_check?: boolean): boolean {
@@ -820,6 +812,22 @@ export class Cosmetic {
 		}
 	}
 
+	public GetPersonaForSlot(slot: string): number | undefined {
+		const persona = string.match(slot, "_persona_(%d+)")[0];
+		return persona != undefined ? parseInt(persona) : undefined
+	}
+
+	public GetCurrentPersona(playerID: PlayerID): number | undefined {
+		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
+		if (!IsValidEntity(hero)) {
+			return;
+		}
+		const modifier = this.GetModifierForSlot(hero, "persona_selector");
+		if (modifier != undefined) {
+			return modifier.persona;
+		}
+	}
+
 	public GetParticleReplacements(playerID: PlayerID): ParticleReplacements {
 		const replacements : ParticleReplacements = {};
 		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
@@ -862,19 +870,45 @@ export class Cosmetic {
 		return replacements;
 	}
 
-	public GetPersonaForSlot(slot: string): number | undefined {
-		const persona = string.match(slot, "_persona_(%d+)")[0];
-		return persona != undefined ? parseInt(persona) : undefined
-	}
-
-	public GetCurrentPersona(playerID: PlayerID): number | undefined {
+	public GetHeroIconReplacements(playerID: PlayerID): CosmeticHeroIconReplacements {
+		const replacements : CosmeticHeroIconReplacements = {};
 		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
 		if (!IsValidEntity(hero)) {
-			return;
+			return replacements;
 		}
-		const modifier = this.GetModifierForSlot(hero, "persona_selector");
-		if (modifier != undefined) {
-			return modifier.persona;
+		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
+		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
+		for (const modifier of modifiers) {
+			Object.assign(replacements, modifier.hero_icons);
 		}
+		return replacements;
+	}
+
+	public GetAbilityIconReplacements(playerID: PlayerID): CosmeticAbilityIconReplacements {
+		const replacements : CosmeticAbilityIconReplacements = {};
+		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
+		if (!IsValidEntity(hero)) {
+			return replacements;
+		}
+		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
+		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
+		for (const modifier of modifiers) {
+			Object.assign(replacements, modifier.ability_icons);
+		}
+		return replacements;
+	}
+
+	public GetItemIconReplacements(playerID: PlayerID): CosmeticItemIconReplacements {
+		const replacements : CosmeticItemIconReplacements = {};
+		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
+		if (!IsValidEntity(hero)) {
+			return replacements;
+		}
+		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
+		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
+		for (const modifier of modifiers) {
+			Object.assign(replacements, modifier.item_icons);
+		}
+		return replacements;
 	}
 }

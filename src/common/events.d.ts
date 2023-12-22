@@ -12,9 +12,30 @@
  */
 
 interface CustomNetTableDeclarations {
-    cosmetic : {
-        [hero_name : string] : CosmeticSlots
+    cosmetic: {
+        replacements: {
+            [player_id: string]: CosmeticReplacements
+        },
+        [hero_name: string]: CosmeticSlots | CosmeticReplacements
     }
+}
+
+interface CosmeticReplacements {
+    hero_icons?: CosmeticHeroIconReplacements,
+    ability_icons?: CosmeticAbilityIconReplacements,
+    item_icons?: CosmeticItemIconReplacements,
+}
+
+interface CosmeticHeroIconReplacements {
+	[hero_icon: string]: string
+}
+
+interface CosmeticAbilityIconReplacements {
+	[ability_icon: string]: string
+}
+
+interface CosmeticItemIconReplacements {
+	[item_icon: string]: string
 }
 
 interface CosmeticSlotInfo {

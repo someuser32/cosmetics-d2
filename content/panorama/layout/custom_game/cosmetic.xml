@@ -62,7 +62,7 @@
 					<Panel id="Items" hittest="true" />
 				</Panel>
 			</Panel>
-			<Button id="CosmeticsOpen" onactivate="ToggleCosmetics();" hittest="true">
+			<Button id="CosmeticsOpen" onactivate="cosmetic.ToggleCosmetics();" hittest="true">
 				<Panel id="Icon" />
 			</Button>
 		</Panel>

@@ -45,7 +45,9 @@ export class GameMode {
 		}
         const playerID = npc.GetPlayerOwnerID();
         const original_hero = playerID != -1 ? PlayerResource.GetSelectedHeroEntity(playerID): undefined;
+
         GameRules.Cosmetic.OnNPCSpawned(npc);
+
 		if (GetAttribute(npc, "bFirstSpawn", true) == true) {
             SetAttribute(npc, "bFirstSpawn", false);
         }

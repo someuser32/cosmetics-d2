@@ -18,6 +18,9 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 	wearable_models : WearableModelsReplacements = {};
 	particle_replacements: ParticleReplacements = {};
 	sound_replacements: SoundReplacements = {};
+	hero_icons: CosmeticHeroIconReplacements = {};
+	ability_icons: CosmeticAbilityIconReplacements = {};
+	item_icons: CosmeticItemIconReplacements = {};
 
 	GetAttributes(): ModifierAttribute {
 		return ModifierAttribute.PERMANENT + ModifierAttribute.MULTIPLE;
@@ -31,7 +34,7 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 		this.caster = this.GetCaster()!;
 		this.parent = this.GetParent();
 		this.kv = kv;
-		this.style = kv.style ?? -1;
+		this.style = kv.style ?? 0;
 
 		this.hEntity = CreateUnitByName("npc_dota_base_additive", this.parent.GetAbsOrigin(), false, undefined, undefined, this.parent.GetTeamNumber());
 		this.hEntity.SetDayTimeVisionRange(0);
@@ -106,6 +109,12 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 					}
 				} else if (asset["type"] == "sound") {
 					this.sound_replacements[asset["asset"]] = asset["modifier"];
+				} else if (asset["type"] == "ability_icon") {
+					this.ability_icons[asset["asset"]] = asset["modifier"];
+				} else if (asset["type"] == "inventory_icon") {
+					this.item_icons[asset["asset"]] = asset["modifier"];
+				} else if (asset["type"] == "icon_replacement_hero") {
+					this.hero_icons[asset["asset"]] = asset["modifier"];
 				}
 			}
 		}

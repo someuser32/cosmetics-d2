@@ -67,7 +67,7 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 		this.kv = kv;
 
 		this.model = kv.model;
-		this.style = kv.style ?? this.style ?? -1;
+		this.style = kv.style ?? this.style ?? 0;
 		this.ResetVisuals();
 
 		if (this.caster.IsIllusion()) {
@@ -233,7 +233,7 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 
 	ResetVisuals(): void {
 		if (IsValidEntity(this.parent)) {
-			if (this.style == -1) {
+			if (this.style == 0) {
 				this.parent.SetSkin(0);
 			}
 
