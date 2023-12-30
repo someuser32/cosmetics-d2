@@ -42,6 +42,11 @@ export class ObjectUtils {
     }
 }
 
+export function hexToRGB(hex: string): RGBColorArray {
+	const decimal = parseInt(hex, 16);
+	return [(decimal >> 16) & 255, (decimal >> 8) & 255, decimal & 255];
+}
+
 export function GetAttribute(obj: any, attribute: string, default_value?: any): any | undefined {
 	return obj[attribute] ?? default_value;
 }

@@ -13,7 +13,9 @@ scripts/*
 **/items_game_test.txt
 **/items_game.d.ts
 **/items_game_test.d.ts
-**/non_configurable.txt
+**/dota_english.txt
+**/non_configurable_particles.txt
+**/non_configurable_kinetics.txt
 **/behaviors.json
 
 # TypeScript compiled files

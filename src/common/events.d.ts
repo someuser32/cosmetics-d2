@@ -88,3 +88,11 @@ interface CosmeticEquippedItem {
 interface CosmeticEquippedItems {
     [slot_name: string]: CosmeticEquippedItem
 }
+
+interface CosmeticPrismaticGems {
+    [gem_name: string]: RGBColorArray
+}
+
+interface CosmeticKineticGems {
+    [gem_name: string]: string
+}

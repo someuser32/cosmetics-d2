@@ -10,15 +10,16 @@
 // [x] ability icon replacement
 // [x] item icon replacement
 // [x] bundles
-// [ ] color gems
+// [ ] prismatic gems
+// [ ] kinetic gems
 // [ ] taunts
-// [ ] voice
 // [ ] apply when equipped ability effect
+// [ ] voice
 
 
 import "../lib/kvparser/kvparser";
 import { reloadable } from "../lib/tstl-utils";
-import { GetAttribute, MathUtils, ObjectUtils, SetAttribute } from "../lib/client";
+import { GetAttribute, MathUtils, ObjectUtils, SetAttribute, hexToRGB } from "../lib/client";
 import { ATTACH_TYPES } from "./vars";
 
 import { modifier_cosmetic_ts } from "./modifiers/modifier_cosmetic";
@@ -66,7 +67,7 @@ export class Cosmetic {
 	hero_items : HeroItems = {};
 	model_to_ids : {[model_name : string] : number} = {};
 	equipped_items : PlayersEquippedItems = {};
-	behaviors_json : BehaviorsJSON = {};
+	behaviors_json : BehaviorsJSON = {"items": {}, "kinetic_gems": {}};
 	// particle_owners : {[particle : ParticleID] : [string, PlayerID]} = {}
 	possible_sound_replacements : {[sound_name: string]: string[]} = {};
 
@@ -485,6 +486,23 @@ export class Cosmetic {
 				this.hero_items[hero][item["slot"]][parseInt(item_id)] = item;
 			}
 		}
+	}
+
+	public HandleGems(): void {
+		const prismatic_gems : CosmeticPrismaticGems = {};
+		/**
+		 "unusual_red"
+		{
+			"color_name"		"UnusualRed"
+			"hex_color"		"#D03D33"
+		}
+		 */
+		for (const [gem_name, gem] of Object.entries(this.items_game!["items_game"]["colors"])) {
+			if (gem_name.startsWith("unusual_")) {
+				prismatic_gems[gem_name] = hexToRGB(gem["hex_color"]);
+			}
+		}
+		return
 	}
 
 	public GetEquippedItems(playerID: PlayerID): CosmeticEquippedItems {

@@ -1,9 +1,3 @@
-interface RGBColor {
-	r: number,
-	g: number,
-	b: number,
-}
-
 interface PrecacheKV {
 	[asset_name : string | "particle" | "model" | "soundfile" | "particle_folder"] : string
 }

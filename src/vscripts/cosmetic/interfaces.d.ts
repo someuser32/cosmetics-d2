@@ -85,8 +85,17 @@ interface SpecialBehavior extends SpecialBehaviorInfo {
 	parent_style?: number
 }
 
+interface KineticGemInfo {
+	[item_id: number]: 1
+}
+
 interface BehaviorsJSON {
-	[name: string]: SpecialBehavior
+	items: {
+		[name: string]: SpecialBehavior
+	}
+	kinetic_gems: {
+		[name: string]: KineticGemInfo
+	}
 }
 
 interface ParticleReplacements {

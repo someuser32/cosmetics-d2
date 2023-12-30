@@ -152,7 +152,7 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 			const wearable = mod.hEntityModifier;
 			if (wearable != undefined) {
 				const wearable_item_id = wearable.kv!.item_id;
-				const behaviors = GameRules.Cosmetic.behaviors_json[wearable_item_id.toString()];
+				const behaviors = GameRules.Cosmetic.behaviors_json["items"][wearable_item_id.toString()];
 				if (behaviors != undefined && behaviors["parent_style"] == this.kv!.item_id) {
 					if (this.style != wearable.special_style) {
 						wearable.ResetVisuals();

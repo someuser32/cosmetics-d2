@@ -76,7 +76,7 @@ export class ModifierCosmeticBase extends BaseModifier {
 	}
 
 	SpecialBehaviors(): boolean {
-		const behaviors = GameRules.Cosmetic.behaviors_json[this.kv!.item_id.toString()];
+		const behaviors = GameRules.Cosmetic.behaviors_json["items"][this.kv!.item_id.toString()];
 
 		if (behaviors == undefined) {
 			return false;

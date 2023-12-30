@@ -1,7 +1,7 @@
 {
-  "name": "cosmetic_particles_updater",
+  "name": "cosmetic-behaviors-updater",
   "version": "1.0.0",
-  "description": "an application to update particles in dota 2 cosmetics by reading pak01_dir.vpk and sending it to server",
+  "description": "an application to update behaviors.json in dota 2 cosmetics by reading pak01_dir.vpk and sending it to server",
   "main": "index.js",
   "scripts": {
     "main": "node index.js"
@@ -12,10 +12,13 @@
   "dependencies": {
     "dotenv": "^16.3.1",
     "easy-keyvalues": "^1.2.2",
+    "humanoid-js": "^1.0.1",
     "kvparser": "^1.0.2",
     "node-fetch": "^3.3.2",
+    "node-html-parser": "^6.1.12",
     "regedit": "^5.1.2",
     "sync-request": "^6.1.0",
+    "tabletojson": "^4.0.1",
     "vpk2": "^0.2.0"
   }
 }
