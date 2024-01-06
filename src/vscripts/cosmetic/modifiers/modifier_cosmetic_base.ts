@@ -121,8 +121,8 @@ export class ModifierCosmeticBase extends BaseModifier {
 		}
 
 		const model_skin : number | undefined = this.GetSharedValue("model_skin");
-		this.parent.SetSkin(model_skin ?? 0);
 		this.parent.SetMaterialGroup(model_skin != undefined ? model_skin.toString() : "default");
+		this.parent.SetSkin(model_skin ?? 0);
 
 		const model_bodygroups = this.GetUnionValue("model_bodygroups") as SpecialBehaviorModelInfo["bodygroups"];
 		if (model_bodygroups != undefined) {

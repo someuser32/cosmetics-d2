@@ -385,11 +385,11 @@ export class Cosmetic {
 	}
 
 	public InitBehaviors(): void {
-		if (this.behaviors_json != undefined && Object.keys(this.behaviors_json).length > 0) {
+		if (this.behaviors_json["items"] != undefined && Object.keys(this.behaviors_json["items"]).length > 0) {
 			// return;
 		}
 
-		this.behaviors_json = {} as BehaviorsJSON;
+		this.behaviors_json = {"items": {}, "kinetic_gems": {}} as BehaviorsJSON;
 
 		const r = CreateHTTPRequestScriptVM("GET", BEHAVIORS_JSON_URL);
 

@@ -187,12 +187,12 @@ export class modifier_cosmetic_wearable_ts extends ModifierCosmeticBase {
 	}
 
 	ApplyVisuals(): void {
-		const model_info : WearableModelReplacement = Object.assign({"model": this.model, "skin": this.model_skin}, this.GetUnionParentValue("wearable_models")![this.model] ?? {});
+		const model_info : WearableModelReplacement = Object.assign({"model": this.model, "skin": this.model_skin}, (this.GetUnionParentValue("wearable_models") ?? {})[this.model] ?? {});
 		this.parent.SetModel(model_info["model"]);
 		this.parent.SetOriginalModel(model_info["model"]);
 
-		this.parent.SetSkin(model_info["skin"] ?? 0);
 		this.parent.SetMaterialGroup(model_info["skin"] != undefined ? model_info["skin"].toString() : "default");
+		this.parent.SetSkin(model_info["skin"] ?? 0);
 
 		const model_bodygroups = this.GetUnionValue("model_bodygroups") as SpecialBehaviorModelInfo["bodygroups"];
 		if (model_bodygroups != undefined) {
