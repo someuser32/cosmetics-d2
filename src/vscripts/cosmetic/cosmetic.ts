@@ -70,6 +70,8 @@ export class Cosmetic {
 	behaviors_json : BehaviorsJSON = {"items": {}, "kinetic_gems": {}};
 	// particle_owners : {[particle : ParticleID] : [string, PlayerID]} = {}
 	possible_sound_replacements : {[sound_name: string]: string[]} = {};
+	prismatic_gems : CosmeticPrismaticGems = {};
+	kinetic_gems : KineticGems = {};
 
 	constructor() {
 	}
@@ -89,23 +91,24 @@ export class Cosmetic {
 
 		ParticleManager.CreateParticle = function(particleName: string, partileAttach: ParticleAttachment, owner: CBaseEntity | undefined, source?: PlayerID): ParticleID {
 			const playerOwnerID = source != undefined ? source : IsValidEntity(owner) && owner.IsBaseNPC() ? owner.GetPlayerOwnerID() : -1;
-			const particleReplacement = GameRules.Cosmetic.GetParticleReplacements(playerOwnerID);
-			if (particleReplacement[particleName] != undefined) {
-				if (particleReplacement[particleName]["name"] != undefined) {
-					particleName = particleReplacement[particleName]["name"]!;
+			const particleReplacements = GameRules.Cosmetic.GetParticleReplacements(playerOwnerID);
+			const particleReplacement = particleReplacements[particleName];
+			if (particleReplacement != undefined) {
+				if (particleReplacement["name"] != undefined) {
+					particleName = particleReplacement["name"]!;
 				}
 
-				if (particleReplacement[particleName]["pattach"] != undefined) {
-					partileAttach = particleReplacement[particleName]["pattach"]!;
+				if (particleReplacement["pattach"] != undefined) {
+					partileAttach = particleReplacement["pattach"]!;
 				}
 			}
 			const fx = valve_create_particle.bind(this)(particleName, partileAttach, owner);
 			// if (playerOwnerID != -1) {
 			// 	GameRules.Cosmetic.particle_owners[fx] = [particleName, playerOwnerID];
 			// }
-			if (particleReplacement[particleName] != undefined && owner != undefined) {
-				if (particleReplacement[particleName]["control_points"] != undefined) {
-					for (const [control_point_index, control_point] of Object.entries(particleReplacement[particleName]["control_points"]!)) {
+			if (particleReplacement != undefined && owner != undefined) {
+				if (particleReplacement["control_points"] != undefined) {
+					for (const [control_point_index, control_point] of Object.entries(particleReplacement["control_points"]!)) {
 						let vector = owner.GetAbsOrigin();
 						if (control_point["vector"] != undefined) {
 							if (typeof control_point["vector"] == "object") {
@@ -118,19 +121,24 @@ export class Cosmetic {
 					}
 				}
 			}
+			const prismaticInfo = GameRules.Cosmetic.GetPrismaticGemsParticlesInfo(playerOwnerID);
+			if (prismaticInfo[particleName] != undefined) {
+
+			}
 			return fx;
 		}
 
 		function GetSoundForPlayerID(soundName: string, playerID: PlayerID): string {
-			const soundReplacement = GameRules.Cosmetic.GetSoundReplacements(playerID);
-			if (soundReplacement[soundName] != undefined) {
+			const soundReplacements = GameRules.Cosmetic.GetSoundReplacements(playerID);
+			const soundReplacement = soundReplacements[soundName];
+			if (soundReplacement != undefined) {
 				if (GameRules.Cosmetic.possible_sound_replacements[soundName] == undefined) {
 					GameRules.Cosmetic.possible_sound_replacements[soundName] = [];
 				}
-				if (!GameRules.Cosmetic.possible_sound_replacements[soundName].includes(soundReplacement[soundName])) {
-					GameRules.Cosmetic.possible_sound_replacements[soundName].push(soundReplacement[soundName]);
+				if (!GameRules.Cosmetic.possible_sound_replacements[soundName].includes(soundReplacement)) {
+					GameRules.Cosmetic.possible_sound_replacements[soundName].push(soundReplacement);
 				}
-				soundName = soundReplacement[soundName];
+				soundName = soundReplacement;
 			}
 			return soundName;
 		}
@@ -140,9 +148,10 @@ export class Cosmetic {
 			if (GameRules.Cosmetic.possible_sound_replacements[soundName] != undefined) {
 				sounds.push(...GameRules.Cosmetic.possible_sound_replacements[soundName]);
 			}
-			const soundReplacement = GameRules.Cosmetic.GetSoundReplacements(playerID);
-			if (soundReplacement[soundName] != undefined && !sounds.includes(soundReplacement[soundName])) {
-				sounds.push(soundReplacement[soundName]);
+			const soundReplacements = GameRules.Cosmetic.GetSoundReplacements(playerID);
+			const soundReplacement = soundReplacements[soundName];
+			if (soundReplacement != undefined && !sounds.includes(soundReplacement)) {
+				sounds.push(soundReplacement);
 			}
 			return sounds;
 		}
@@ -323,7 +332,8 @@ export class Cosmetic {
 
 	public PostInit(): void {
 		this.InitItems();
-		this.InitParticles();
+		this.InitBehaviors();
+		this.HandlePrismaticGems();
 	}
 
 	public PostInitOnce(): void {
@@ -374,7 +384,7 @@ export class Cosmetic {
 		};
 	}
 
-	public InitParticles(): void {
+	public InitBehaviors(): void {
 		if (this.behaviors_json != undefined && Object.keys(this.behaviors_json).length > 0) {
 			// return;
 		}
@@ -390,6 +400,7 @@ export class Cosmetic {
 				const result = json.decode(req.Body)[0];
 				if (result != undefined) {
 					_this.behaviors_json = result as BehaviorsJSON;
+					_this.HandleKineticGems();
 				} else {
 					GameRules.SendCustomMessage("[Cosmetic] Failed to get special behaviors from database: particles or styles may look wrong", 0, 0);
 				}
@@ -488,21 +499,18 @@ export class Cosmetic {
 		}
 	}
 
-	public HandleGems(): void {
-		const prismatic_gems : CosmeticPrismaticGems = {};
-		/**
-		 "unusual_red"
-		{
-			"color_name"		"UnusualRed"
-			"hex_color"		"#D03D33"
-		}
-		 */
+	public HandlePrismaticGems(): void {
 		for (const [gem_name, gem] of Object.entries(this.items_game!["items_game"]["colors"])) {
 			if (gem_name.startsWith("unusual_")) {
-				prismatic_gems[gem_name] = hexToRGB(gem["hex_color"]);
+				this.prismatic_gems[gem_name] = hexToRGB(gem["hex_color"]);
 			}
 		}
-		return
+	}
+
+	public HandleKineticGems(): void {
+		for (const [gem_name, item_ids] of Object.entries(this.behaviors_json["kinetic_gems"])) {
+			this.kinetic_gems[gem_name] = item_ids
+		}
 	}
 
 	public GetEquippedItems(playerID: PlayerID): CosmeticEquippedItems {
@@ -567,13 +575,15 @@ export class Cosmetic {
 
 		if (item["type"] == "bundle") {
 			item = item as Bundle;
-			const items = ObjectUtils.fromEntries(item["bundle"].filter((item_id) => type(item_id) == "number").map((item_id) => ([this.items[item_id as number]["slot"], item_id])));
+			const items = Object.fromEntries(item["bundle"].filter((item_id) => type(item_id) == "number").map((item_id) => ([this.items[item_id as number]["slot"], item_id])));
 			const unused_slots = Object.keys(this.slots[heroname]["slots"]).filter((slot) => (!Object.keys(items).includes(slot)));
 			Object.values(items).map((item_id) => (this.EquipItem(Object.assign(Object.assign({}, event), {"item": item_id}))));
 			unused_slots.map((slot) => this.DefaultSlot(event.PlayerID, slot, false, true));
 			return;
 		}
 		item = item as Item;
+
+		const style = Math.min(event.style, item["styles"]);
 
 		if (this.equipped_items[event.PlayerID] == undefined) {
 			this.equipped_items[event.PlayerID] = {}
@@ -582,10 +592,10 @@ export class Cosmetic {
 			this.equipped_items[event.PlayerID][heroname] = {}
 		}
 
-		if (!this._EquipItem(event.PlayerID, event.item, event.style ?? 1, false)) {
+		if (!this._EquipItem(event.PlayerID, event.item, style ?? 1, false)) {
 			return;
 		}
-		this.equipped_items[event.PlayerID][heroname][item["slot"]] = {"item": event.item, "style": event.style ?? 0}
+		this.equipped_items[event.PlayerID][heroname][item["slot"]] = {"item": event.item, "style": style ?? 0}
 
 		this.RequestEquippedItems({"PlayerID": event.PlayerID});
 
@@ -612,7 +622,7 @@ export class Cosmetic {
 	}
 
 	public _EquipItem(playerID: PlayerID, item_id: number, style: number, ignore_default_check?: boolean): boolean {
-		style = style - 1
+		style = style - 1;
 		let item = this.items[item_id];
 		if (item == undefined) {
 			return false;
@@ -624,7 +634,7 @@ export class Cosmetic {
 		const heroname = hero.GetUnitName();
 		if (item["type"] == "bundle") {
 			item = item as Bundle;
-			const items = ObjectUtils.fromEntries(item["bundle"].filter((item_id) => type(item_id) == "number").map((item_id) => ([this.items[item_id as number]["slot"], item_id])));
+			const items = Object.fromEntries(item["bundle"].filter((item_id) => type(item_id) == "number").map((item_id) => ([this.items[item_id as number]["slot"], item_id])));
 			const unused_slots = Object.keys(this.slots[heroname]["slots"]).filter((slot) => (!Object.keys(items).includes(slot)));
 			const result = Object.values(items).map((item_id) => (this._EquipItem(playerID, item_id as number, style, ignore_default_check)));
 			unused_slots.map((slot) => this.DefaultSlot(playerID, slot, false, true));
@@ -914,7 +924,7 @@ export class Cosmetic {
 				}
 			}
 		}
-		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, ObjectUtils.filter(modifier, ([modifier_key, modifier_value]) => (modifier_key != "priority"))])));
+		return Object.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, ObjectUtils.filter(modifier, ([modifier_key, modifier_value]) => (modifier_key != "priority"))])));
 	}
 
 	public GetSoundReplacements(playerID: PlayerID): ActualSoundReplacements {
@@ -936,7 +946,7 @@ export class Cosmetic {
 				}
 			}
 		}
-		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
+		return Object.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
 	}
 
 	public GetUnitModelReplacements(playerID: PlayerID): UnitModelsReplacements {
@@ -958,7 +968,7 @@ export class Cosmetic {
 				}
 			}
 		}
-		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, ObjectUtils.filter(modifier, ([modifier_key, modifier_value]) => (modifier_key != "priority"))])));
+		return Object.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, ObjectUtils.filter(modifier, ([modifier_key, modifier_value]) => (modifier_key != "priority"))])));
 	}
 
 	public GetHeroIconReplacements(playerID: PlayerID): CosmeticHeroIconReplacements {
@@ -980,7 +990,7 @@ export class Cosmetic {
 				}
 			}
 		}
-		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
+		return Object.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
 	}
 
 	public GetAbilityIconReplacements(playerID: PlayerID): CosmeticAbilityIconReplacements {
@@ -1002,7 +1012,7 @@ export class Cosmetic {
 				}
 			}
 		}
-		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
+		return Object.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
 	}
 
 	public GetItemIconReplacements(playerID: PlayerID): CosmeticItemIconReplacements {
@@ -1024,6 +1034,24 @@ export class Cosmetic {
 				}
 			}
 		}
-		return ObjectUtils.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
+		return Object.fromEntries(Object.entries(replacements).map(([asset, modifier]) => ([asset, modifier["name"]])));
+	}
+
+	public GetPrismaticGemsParticlesInfo(playerID: PlayerID): ParticlePrismaticGems {
+		const info : ParticlePrismaticGems = {};
+		const hero = PlayerResource.GetSelectedHeroEntity(playerID);
+		if (!IsValidEntity(hero)) {
+			return {};
+		}
+		const modifiers = hero.FindAllModifiersByName(modifier_cosmetic_ts.name) as modifier_cosmetic_ts[];
+		modifiers.sort((a: modifier_cosmetic_ts, b: modifier_cosmetic_ts) => (a.GetPriority() - b.GetPriority() || b.GetCreationTime() - a.GetCreationTime()));
+		for (const modifier of modifiers) {
+			Object.assign(info, modifier.prismatic_particles);
+		}
+		return info;
+	}
+
+	public GetEquippedPrismatic(playerID: PlayerID): RGBColorArray | undefined {
+		return undefined;
 	}
 }

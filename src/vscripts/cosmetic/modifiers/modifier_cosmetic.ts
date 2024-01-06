@@ -21,6 +21,7 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 	hero_icons: HeroIconReplacements = {};
 	ability_icons: AbilityIconReplacements = {};
 	item_icons: ItemIconReplacements = {};
+	prismatic_particles : ParticlePrismaticGems = {};
 
 	GetAttributes(): ModifierAttribute {
 		return ModifierAttribute.PERMANENT + ModifierAttribute.MULTIPLE;
@@ -143,6 +144,15 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 					}
 				}
 			}
+		} else if (behavior_name == "particles") {
+			const info = behavior as {[particle_name: string]: SpecialBehaviorParticleInfo | "destroy"};
+			for (const [particle_name, particle_info] of Object.entries(info)) {
+				if (particle_info != "destroy") {
+					if (particle_info["prismatic_gems"] != undefined) {
+						this.prismatic_particles[particle_name] = particle_info["prismatic_gems"];
+					}
+				}
+			}
 		}
 	}
 
@@ -202,6 +212,7 @@ export class modifier_cosmetic_ts extends ModifierCosmeticBase {
 		this.wearable_models = {};
 		this.sound_replacements = {};
 		this.particle_replacements = {};
+		this.prismatic_particles = {};
 
 		super.ResetVisuals();
 	};

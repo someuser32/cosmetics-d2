@@ -94,5 +94,7 @@ interface CosmeticPrismaticGems {
 }
 
 interface CosmeticKineticGems {
-    [gem_name: string]: string
+    [gem_name: string]: {
+        [item_id: number]: 1
+    }
 }

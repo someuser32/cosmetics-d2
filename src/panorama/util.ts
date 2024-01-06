@@ -121,4 +121,8 @@ class ArrayUtils {
 	static mostElement<V>(arr: Array<V>): V | undefined {
 		return arr.sort((a, b) => arr.filter((v) => (v === a)).length - arr.filter((v) => (v === b)).length).pop();
 	}
+
+	static unzip<V>(arr: Array<Array<V>>): Array<V> {
+		return arr.reduce((a, b) => a.concat(b));
+	}
 }

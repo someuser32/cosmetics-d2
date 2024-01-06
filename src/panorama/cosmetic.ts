@@ -1,15 +1,6 @@
-interface EquippedItems {
-	[slot_name : string] : number
-}
+type Rarity = "common" | "uncommon" | "rare" | "mythical" | "legendary" | "immortal" | "ancient" | "arcana" | "seasonal";
 
-function GetLocalHeroName(): string {
-	return Game.GetLocalPlayerInfo()["player_selected_hero"];
-}
-
-function GetItemIcon(itemEntityIndex: ItemEntityIndex): string {
-	const texture_sf = Items.GetAbilityTextureSF(itemEntityIndex);
-	return texture_sf != "" ? texture_sf : Abilities.GetAbilityTextureName(itemEntityIndex).substring("item_".length);
-}
+const Rarities : ReadonlyArray<Rarity> = ["common", "uncommon", "rare", "mythical", "legendary", "immortal", "ancient", "arcana", "seasonal"];
 
 class CosmeticReplacer {
 	replacements : CustomNetTableDeclarations["cosmetic"]["replacements"] = {};
@@ -59,7 +50,7 @@ class CosmeticReplacer {
 		const itemimage = itempanel.FindChildTraverse("ItemImage") as ItemImage;
 		const item_customimage = itemimage.FindChildTraverse("CosmeticIcon") as ImagePanel ?? $.CreatePanel("Image", itemimage, "CosmeticIcon", {"hittest": "false", "style": "visibility: collapse; width: 100%; height: 100%;", "scaling": "contain"});
 		const item = itemimage.contextEntityIndex;
-		const item_icon = GetItemIcon(item);
+		const item_icon = Items.GetAbilityTextureSF(item) || Abilities.GetAbilityTextureName(item).substring("item_".length);
 
 		const owner = item !== -1 ? Items.GetPurchaser(item) ?? Abilities.GetCaster(item) : -1;
 		const key = owner !== -1 ? Entities.GetPlayerOwnerID(owner).toString() : "-1";
@@ -216,6 +207,338 @@ class CosmeticReplacer {
 	}
 }
 
+
+class Slot<SlotName extends keyof CosmeticSlots & string=string> {
+	static slots_server? : CosmeticSlots;
+
+	name: SlotName;
+	index: CosmeticSlotInfo["index"];
+	text: CosmeticSlotInfo["text"];
+	visible: boolean;
+
+	constructor(name: SlotName, index: CosmeticSlotInfo["index"], text: CosmeticSlotInfo["text"], visible: boolean=true) {
+		this.name = name;
+		this.index = index;
+		this.text = text;
+		this.visible = visible;
+	}
+
+	get isCurrent(): boolean {
+		const current_slot = Slot.getCurrentSlot();
+		return current_slot != undefined ? current_slot.name == this.name : false;
+	}
+
+	get equippedItemID(): number | undefined {
+		if (Item.equipped_items_server == undefined) {
+			return undefined;
+		}
+		if (Item.equipped_items_server[this.name] == undefined) {
+			const slots = Slot.getAll();
+			for (const item_id of this.itemsID) {
+				const item_info = Item.getInfoFromID(item_id);
+				if (item_info == undefined) {
+					continue;
+				}
+				if (item_info["type"] == "default_item") {
+					return item_id;
+				} else if (item_info["type"] == "bundle" && item_info["bundle"] != undefined) {
+					const bundle = Object.values(item_info["bundle"]);
+					const bundle_slots = bundle.map((item_id) => {
+						const info = Item.getInfoFromID(item_id);
+						return info != undefined ? info["slot"] : undefined;
+					}).filter((slot_name) => slot_name != undefined);
+					if (slots.every((slot) => {
+						if (this.name == slot.name || !slot.hasItems) {
+							return true;
+						}
+						const equipped_item_id = slot.equippedItemID;
+						if (equipped_item_id == undefined) {
+							return false;
+						}
+						if (!bundle_slots.includes(slot.name)) {
+							const info = Item.getInfoFromID(equipped_item_id);
+							return info != undefined && info["type"] == "default_item";
+						}
+						return bundle.includes(equipped_item_id);
+					})) {
+						return item_id;
+					}
+				}
+			}
+		} else {
+			return Item.equipped_items_server[this.name]["item"];
+		}
+		return undefined;
+	}
+
+	get equippedItem(): Item | undefined {
+		const equipped_item_id = this.equippedItemID;
+		return equipped_item_id != undefined ? Item.fromID(equipped_item_id, this) : undefined;
+	}
+
+	get itemsID(): number[] {
+		if (Item.items_server == undefined || Item.items_server[this.name] == undefined) {
+			return [];
+		}
+		return Object.keys(Item.items_server[this.name]).map((item_id) => (parseInt(item_id)));
+	}
+
+	get items(): Item[] {
+		return this.itemsID.map((item_id) => (Item.fromID(item_id, this))).filter((item) => (item != undefined)) as Item[];
+	}
+
+	get hasItems(): boolean {
+		return Item.items_server != undefined && Item.items_server[this.name] != undefined && Object.keys(Item.items_server[this.name]).length > 0;
+	}
+
+	public setCurrent(): void {
+		return Slot.setCurrentSlot(this.name);
+	}
+
+	static fromName<SlotName extends keyof CosmeticSlots & string>(name: SlotName): Slot;
+	static fromName(name: string): Slot | undefined {
+		if (Slot.slots_server == undefined)  {
+			return undefined;
+		}
+		const slot_info = Slot.slots_server[name];
+		if (slot_info == undefined) {
+			return undefined;
+		}
+		return new Slot(name, slot_info["index"], slot_info["text"], slot_info["visible"] == 1);
+	}
+
+	static getAll(): Slot[] {
+		if (Slot.slots_server == undefined)  {
+			return [];
+		}
+		return Object.keys(Slot.slots_server).map((slot_name) => Slot.fromName(slot_name)).sort((slot_a, slot_b) => slot_a.index - slot_b.index);
+	}
+
+	static getCurrentSlot(): Slot | undefined {
+		for (let i=0; i<$("#Slots").GetChildCount(); i++) {
+			const child = $("#Slots").GetChild(i)!;
+			if (child.BHasClass("Active")) {
+				return Slot.fromName(child.GetAttributeString("name", ""));
+			}
+		}
+		return undefined;
+	}
+
+	static setCurrentSlot<SlotName extends keyof CosmeticSlots & string>(name: SlotName): void {
+		for (let i=0; i<$("#Slots").GetChildCount(); i++) {
+			const child = $("#Slots").GetChild(i)!;
+			child.SetHasClass("Active", child.GetAttributeString("name", "") == name);
+		}
+		Item.Load();
+	}
+
+	static Load(data?: NetworkedData<CustomNetTableDeclarations["cosmetic"][keyof CustomNetTableDeclarations["cosmetic"]]> | null): boolean {
+		data = data ?? CustomNetTables.GetTableValue("cosmetic", `slots_${Game.GetLocalPlayerInfo()["player_selected_hero"]}`);
+		if (data == null) {
+			return false;
+		}
+		const default_slots = {"bundle": {"index": -1, "text": "#DOTA_HeroLoadout_FullSets", "visible": 1}} as CosmeticSlots;
+		Slot.slots_server = ObjectUtils.fromEntries(Object.entries(Object.assign(default_slots, data as Object)).filter(([slot_name, slot_info]) => {
+			return !slot_name.startsWith("ability_effects_");
+		})) as CosmeticSlots;
+		$("#Slots").RemoveAndDeleteChildren();
+		for (const slot of Slot.getAll()) {
+			if (!slot.visible) {
+				continue;
+			}
+			const slot_panel = $.CreatePanel("Button", $("#Slots"), `Slot${slot.name}`, {"hittest": "true"});
+			slot_panel.BLoadLayoutSnippet("Slot");
+			slot_panel.SetAttributeString("name", slot.name);
+			(slot_panel.FindChildTraverse("SlotName") as LabelPanel).text = $.Localize(slot.text);
+			slot_panel.SetPanelEvent("onactivate", () => slot.setCurrent());
+		}
+		Item.Load();
+		return true;
+	}
+
+	static Update() {
+		for (let i=0; i<$("#Slots").GetChildCount(); i++) {
+			const child = $("#Slots").GetChild(i)!;
+			const slot = Slot.fromName(child.GetAttributeString("name", ""));
+			const item = slot != undefined ? slot.equippedItem : undefined;
+			if (slot != undefined && item != undefined) {
+				(child.FindChildTraverse("Econ")!.FindChildTraverse("Icon") as ImagePanel).SetImage(`s2r://panorama/images/${item.icon}_png.vtex`);
+				child.SetHasClass("NotDefault", item.type != "default_item");
+				child.SetHasClass("MultiStyles", item.styles > 1);
+				for (const rarity of Rarities) {
+					child.SetHasClass(`Rarity_${rarity}`, item.rarity == rarity);
+				}
+				(child.FindChildTraverse("Econ")!.FindChildTraverse("MultiStyle")!.FindChildTraverse("Selected") as LabelPanel).text = `${item.style}/${item.styles}`;
+			} else {
+				(child.FindChildTraverse("Econ")!.FindChildTraverse("Icon") as ImagePanel).SetImage("s2r://panorama/images/econ/default_no_item_png.vtex");
+				child.SetHasClass("NotDefault", false);
+				child.SetHasClass("MultiStyles", false);
+				for (const rarity of Rarities) {
+					child.SetHasClass(`Rarity_${rarity}`, false);
+				}
+			}
+		}
+	}
+}
+
+
+class Item<SlotName extends keyof CosmeticSlots & string=string> {
+	static items_server? : CosmeticHeroItems;
+	static items_server_cache? : CosmeticHeroItems[keyof CosmeticHeroItems];
+	static equipped_items_server? : CosmeticEquippedItems;
+
+	id: number;
+	slot: Slot;
+
+	constructor(id: number, slot: Slot | SlotName) {
+		this.id = id;
+		this.slot = slot instanceof Slot ? slot : Slot.fromName(slot);
+	}
+
+	get name(): CosmeticHeroItem["name"] {
+		return Item.items_server![this.slot.name][this.id]["name"];
+	}
+
+	get icon(): CosmeticHeroItem["icon"] {
+		return Item.items_server![this.slot.name][this.id]["icon"];
+	}
+
+	get rarity(): Rarity {
+		return Item.items_server![this.slot.name][this.id]["rarity"] as Rarity;
+	}
+
+	get styles(): CosmeticHeroItem["styles"] {
+		return Item.items_server![this.slot.name][this.id]["styles"];
+	}
+
+	get type(): CosmeticHeroItem["type"] {
+		return Item.items_server![this.slot.name][this.id]["type"];
+	}
+
+	get avaiable(): boolean {
+		return Item.items_server![this.slot.name][this.id]["avaiable"] == 1;
+	}
+
+	get bundle(): number[] | undefined {
+		const bundle = Item.items_server![this.slot.name][this.id]["bundle"];
+		return bundle != undefined ? Object.values(bundle) : undefined;
+	}
+
+	get bundle_items(): Item[] | undefined {
+		const bundle = this.bundle;
+		return bundle != undefined ? bundle.map((item_id) => (Item.fromID(item_id))).filter((item) => item != undefined) as Item[] : undefined;
+	}
+
+	get equipped(): boolean {
+		return this.slot.equippedItemID == this.id;
+	}
+
+	get style(): number {
+		if (this.type == "bundle" && this.bundle != undefined) {
+			return ArrayUtils.mostElement(this.bundle_items!.map((item) => item.style)) ?? 1;
+		}
+		return Item.equipped_items_server != undefined && Item.equipped_items_server[this.slot.name] != undefined ? Item.equipped_items_server[this.slot.name]["style"] : 1;
+	}
+
+	public equip(style: number=1): void {
+		return GameEvents.SendCustomGameEventToServer("cosmetic_equip_item", {"item": this.id, "style": style});
+	}
+
+	static fromID(id: number, slot: Slot | undefined = undefined): Item | undefined {
+		if (id === -1) {
+			return undefined;
+		}
+		if (Item.items_server_cache == undefined) {
+			return undefined;
+		}
+		if (slot != undefined) {
+			return new Item(id, slot);
+		}
+		const item_info = Item.items_server_cache[id];
+		if (item_info != undefined) {
+			return new Item(id, item_info["slot"]);
+		}
+	}
+
+	static getInfoFromID(id: number): CosmeticHeroItem | undefined {
+		if (Item.items_server_cache == undefined) {
+			return undefined;
+		}
+		return Item.items_server_cache[id];
+	}
+
+	static getAll(): Item[] {
+		if (Item.items_server == undefined) {
+			return [];
+		}
+		return ArrayUtils.unzip(Object.entries(Item.items_server).map(([slot_name, items]) => {
+			const slot = Slot.fromName(slot_name);
+			return Object.keys(items).map((item_id) => (Item.fromID(parseInt(item_id), slot))).filter((item) => (item != undefined));
+		})) as Item[];
+	}
+
+	static getEquippedItems(): Item[] {
+		return Slot.getAll().filter((slot) => (slot.visible)).map((slot) => (slot.equippedItem)).filter((item) => (item != undefined)) as Item[];
+	}
+
+	static Load(): boolean {
+		$("#Items").RemoveAndDeleteChildren();
+		const slot = Slot.getCurrentSlot();
+		if (slot == undefined) {
+			return false;
+		}
+		const items = Item.getAll();
+		const equipped_item_id = slot.equippedItemID;
+		for (const item of items) {
+			if (item.slot.name != slot.name) {
+				continue;
+			}
+			const item_panel = $.CreatePanel("Button", $("#Items"), `Item${item.id}`, {"hittest": "false"});
+			item_panel.BLoadLayoutSnippet("Item");
+			item_panel.SetAttributeInt("item_id", item.id);
+			item_panel.SetHasClass("Owned", item.avaiable);
+			item_panel.SetHasClass("Equipped", item.id == equipped_item_id);
+			item_panel.SetHasClass("MultiStyles", item.styles > 1);
+			for (const rarity of Rarities) {
+				item_panel.SetHasClass(`Rarity_${rarity}`, item.rarity == rarity);
+			}
+			(item_panel.FindChildTraverse("Icon") as ImagePanel).SetImage(`s2r://panorama/images/${item.icon}_png.vtex`);
+			const item_info_panel = item_panel.FindChildTraverse("ItemInfo")!;
+			(item_info_panel.FindChildTraverse("Name") as LabelPanel).text = $.Localize(item.name);
+			(item_info_panel.FindChildTraverse("Status") as LabelPanel).text = item_panel.BHasClass("Equipped") ? "EQUIPPED" : "OWNED";
+			if (item.styles > 1) {
+				const selected_style = item.style;
+				for (let i=1; i<=item.styles; i++) {
+					$.CreatePanel("RadioButton", item_info_panel.FindChildTraverse("StylesSelector")!, `${i}`, {"class": "Style", "group": "style", "selected": i==selected_style, "hittest": "true"});
+				}
+			}
+			item_info_panel.FindChildTraverse("Equip")!.SetPanelEvent("onactivate", () => {
+				const styles = item_info_panel.FindChildTraverse("StylesSelector")!;
+				const selected_style = styles.GetChildCount() > 0 ? (styles.GetChild(0) as RadioButton).GetSelectedButton() ?? 1 : 1;
+				item.equip(typeof(selected_style) != "number" ? parseInt(selected_style.id): selected_style);
+			});
+			item_info_panel.FindChildTraverse("StylesSelector")!.SetPanelEvent("onactivate", () => {
+				const selected_style = parseInt((item_info_panel.FindChildTraverse("StylesSelector")!.GetChild(0) as RadioButton).GetSelectedButton().id);
+				item.equip(selected_style);
+			});
+			item_panel.FindChildTraverse("TooltipTrigger")!.SetPanelEvent("onmouseover", () => ($.DispatchEvent("DOTAShowEconItemTooltip", item_panel, item.id, 0, -1)));
+			item_panel.FindChildTraverse("TooltipTrigger")!.SetPanelEvent("onmouseout", () => ($.DispatchEvent("DOTAHideEconItemTooltip", item_panel)));
+		}
+		return true;
+	}
+
+	static Update(): void {
+		for (let i=0; i<$("#Items").GetChildCount(); i++) {
+			const child = $("#Items").GetChild(i)!;
+			const item = Item.fromID(child.GetAttributeInt("item_id", -1));
+			if (item == undefined) {
+				continue;
+			}
+			child.SetHasClass("Equipped", item.equipped);
+		}
+	}
+}
+
 class Cosmetic {
 	slots_server? : CosmeticSlots
 	items_server? : CosmeticHeroItems
@@ -227,7 +550,7 @@ class Cosmetic {
 		GameEvents.Subscribe("cosmetic_respond_items", (event) => this.CosmeticRespondItemsEvent(event));
 		GameEvents.Subscribe("cosmetic_respond_equipped_items", (event) => this.CosmeticRespondEquippedItemsEvent(event));
 		GameEvents.SendCustomGameEventToServer("cosmetic_request_items", {});
-		this.SlotsLoad();
+		Slot.Load();
 	}
 
 	public ToggleCosmetics(): void {
@@ -235,246 +558,10 @@ class Cosmetic {
 		$.GetContextPanel().ToggleClass("open");
 	}
 
-	public GetSelectedSlot(): string | undefined {
-		for (let i=0; i<$("#Slots").GetChildCount(); i++) {
-			const child = $("#Slots").GetChild(i)!;
-			if (child.BHasClass("Active")) {
-				return child.GetAttributeString("name", "");
-			}
-		}
-	}
-
-	public SelectSlot(slot_name: string): void {
-		for (let i=0; i<$("#Slots").GetChildCount(); i++) {
-			const child = $("#Slots").GetChild(i)!;
-			child.SetHasClass("Active", child.GetAttributeString("name", "") == slot_name);
-		}
-		this.ItemsLoad();
-	}
-
-	public GetSlotForItem(item_id: number): string | undefined {
-		if (this.slots_server == undefined || this.items_server == undefined) {
-			return undefined;
-		}
-		for (const slot_name of Object.keys(this.slots_server)) {
-			if (this.items_server[slot_name][item_id] != undefined) {
-				return slot_name;
-			}
-		}
-		return undefined;
-	}
-
-	public GetEquippedItem(slot_name: string): number | undefined {
-		if (this.equipped_items_server == undefined) {
-			return undefined;
-		}
-		if (this.equipped_items_server[slot_name] == undefined) {
-			if (this.items_server == undefined || this.items_server[slot_name] == undefined) {
-				return undefined;
-			}
-			const item_ids = Object.keys(this.items_server[slot_name]);
-			for (let i=0; i<item_ids.length; i++) {
-				const item_id = item_ids[i];
-				const item = this.items_server[slot_name][item_id];
-				if (item["type"] == "default_item" && item["slot"] == slot_name) {
-					return parseInt(item_id);
-				} else if (item["type"] == "bundle" && item["slot"] == slot_name && this.slots_server != undefined && item["bundle"] != undefined) {
-					const bundle_slots = Object.keys(this.slots_server).filter((slot) => (Object.values(item["bundle"]!).some((item_id) => (this.items_server![slot] != undefined && this.items_server![slot][item_id] != undefined))));
-					const is_equipped = Object.keys(this.slots_server).every((slot) => {
-						if (slot == slot_name || this.items_server![slot] == undefined) {
-							return true;
-						}
-						const equipped_item = this.GetEquippedItem(slot);
-						if (equipped_item == undefined || this.items_server![slot][equipped_item] == undefined) {
-							return false;
-						}
-						if (bundle_slots.includes(slot)) {
-							return Object.values(item["bundle"]!).includes(equipped_item);
-						}
-						return this.items_server![slot][equipped_item]["type"] == "default_item";
-					});
-					if (is_equipped) {
-						return parseInt(item_id);
-					}
-				}
-			}
-		} else {
-			return this.equipped_items_server[slot_name]["item"];
-		}
-		return undefined;
-	}
-
-	public GetEquippedItemStyle(slot_name: string): number {
-		const equipped_item_id = this.GetEquippedItem(slot_name);
-		if (equipped_item_id == undefined) {
-			return 1;
-		}
-		const equipped_item = this.items_server![slot_name][equipped_item_id];
-		if (equipped_item["type"] == "bundle" && equipped_item["bundle"] != undefined && this.slots_server != undefined) {
-			const bundle_styles = Object.values(equipped_item["bundle"]!).map((item_id) => (this.GetSlotForItem(item_id))).filter((slot) => (slot != undefined)).map((slot) => (this.GetEquippedItemStyle(slot!)));
-			return ArrayUtils.mostElement(bundle_styles) ?? 1;
-		}
-		return this.equipped_items_server != undefined && this.equipped_items_server[slot_name] != undefined ? this.equipped_items_server[slot_name]["style"] : 1;
-	}
-
-	public GetEquippedItems(): EquippedItems {
-		const valid_items : EquippedItems = {};
-		const default_slots : string[] = [];
-		if (this.slots_server != undefined) {
-			for (let i=0; i<Object.keys(this.slots_server).length; i++) {
-				const [slot_name, slot_info] = [Object.keys(this.slots_server)[i], Object.values(this.slots_server)[i]];
-				if (slot_info["visible"] != 1) {
-					continue;
-				}
-				if (this.equipped_items_server != undefined && this.equipped_items_server[slot_name] != undefined) {
-					valid_items[slot_name] = this.equipped_items_server[slot_name]["item"];
-				} else {
-					default_slots.push(slot_name);
-				}
-			}
-		}
-		if (default_slots.length > 0 && this.items_server != undefined) {
-			for (let i=0; i<default_slots.length; i++) {
-				const equipped_item = this.GetEquippedItem(default_slots[i]);
-				if (equipped_item != undefined) {
-					valid_items[default_slots[i]] = equipped_item;
-				}
-			}
-		}
-		return valid_items;
-	}
-
-	public SlotsLoad(data?: NetworkedData<CustomNetTableDeclarations["cosmetic"][keyof CustomNetTableDeclarations["cosmetic"]]> | null): void {
-		data = data ?? CustomNetTables.GetTableValue("cosmetic", `slots_${GetLocalHeroName()}`);
-		if (data == null) {
-			return;
-		}
-		this.slots_server = ObjectUtils.fromEntries(Object.entries(Object.assign({"bundle": {"index": -1, "text": "#DOTA_HeroLoadout_FullSets", "visible": 1}}, data as Object)).filter(([slot_name, slot_info]) => {
-			return !slot_name.startsWith("ability_effects_");
-		}).sort(([slot_name_a, slot_info_a], [slot_name_b, slot_info_b]) => {
-			return slot_info_a["index"] - slot_info_b["index"];
-		})) as CosmeticSlots;
-		$("#Slots").RemoveAndDeleteChildren();
-		for (let i=0; i<Object.keys(this.slots_server).length; i++) {
-			const [slot_name, slot_info] = [Object.keys(this.slots_server)[i], Object.values(this.slots_server)[i]];
-			if (slot_info["visible"] != 1) {
-				continue;
-			}
-			const panel = $.CreatePanel("Button", $("#Slots"), `Slot${slot_name}`, {"hittest": "true"});
-			panel.BLoadLayoutSnippet("Slot");
-			panel.SetAttributeString("name", slot_name);
-			(panel.FindChildTraverse("SlotName") as LabelPanel).text = $.Localize(slot_info["text"]);
-			panel.SetPanelEvent("onactivate", () => this.SelectSlot(slot_name));
-		}
-		this.ItemsLoad();
-	}
-
-	public ItemsLoad(data?: CosmeticHeroItems): void {
-		data = data ?? this.items_server;
-		if (data == undefined) {
-			return;
-		}
-		$("#Items").RemoveAndDeleteChildren();
-		const slot = this.GetSelectedSlot();
-		if (slot == undefined || data[slot] == undefined) {
-			return;
-		}
-		const item_ids = Object.keys(data[slot]);
-		for (let i=0; i<item_ids.length; i++) {
-			const item_id = parseInt(item_ids[i]);
-			const item = data[slot][item_id.toString()];
-			const panel = $.CreatePanel("Button", $("#Items"), `Item${item_id}`, {"hittest": "false"});
-			panel.BLoadLayoutSnippet("Item");
-			panel.SetAttributeInt("item_id", item_id);
-			panel.SetHasClass("Owned", item["avaiable"] == 1);
-			panel.SetHasClass("Equipped", this.GetEquippedItem(item["slot"]) == item_id);
-			panel.SetHasClass("MultiStyles", item["styles"] > 1);
-			for (let j=0; j<this.rarities.length; j++) {
-				panel.SetHasClass(`Rarity_${this.rarities[j]}`, item["rarity"] == this.rarities[j]);
-			}
-			const ItemInfoPanel = panel.FindChildTraverse("ItemInfo")!;
-			if (panel.BHasClass("Equipped")) {
-				(ItemInfoPanel.FindChildTraverse("Status") as LabelPanel).text = "EQUIPPED";
-			} else if (panel.BHasClass("Owned")) {
-				(ItemInfoPanel.FindChildTraverse("Status") as LabelPanel).text = "OWNED";
-			}
-			if (item["styles"] > 1) {
-				const selected_style = this.GetEquippedItemStyle(slot);
-				for (let i=1; i<=item["styles"]; i++) {
-					$.CreatePanel("RadioButton", ItemInfoPanel.FindChildTraverse("StylesSelector")!, `${i}`, {"class": "Style", "group": "style", "selected": i==selected_style, "hittest": "true"});
-				}
-			}
-			(panel.FindChildTraverse("Icon") as ImagePanel).SetImage(`s2r://panorama/images/${item["icon"]}_png.vtex`);
-			(ItemInfoPanel.FindChildTraverse("Name") as LabelPanel).text = $.Localize(item["name"]);
-			ItemInfoPanel.FindChildTraverse("Equip")!.SetPanelEvent("onactivate", () => {
-				const styles = ItemInfoPanel.FindChildTraverse("StylesSelector")!;
-				const selected = styles.GetChildCount() > 0 ? (styles.GetChild(0) as RadioButton).GetSelectedButton() || 1 : 1;
-				GameEvents.SendCustomGameEventToServer("cosmetic_equip_item", {"item": item_id, "style": typeof(selected) != "number" ? parseInt(selected.id): selected});
-			});
-			ItemInfoPanel.FindChildTraverse("StylesSelector")!.SetPanelEvent("onactivate", () => {
-				const selected = (ItemInfoPanel.FindChildTraverse("StylesSelector")!.GetChild(0) as RadioButton).GetSelectedButton();
-				GameEvents.SendCustomGameEventToServer("cosmetic_equip_item", {"item": item_id, "style": parseInt(selected.id)});
-			});
-			panel.FindChildTraverse("TooltipTrigger")!.SetPanelEvent("onmouseover", () => {
-				$.DispatchEvent("DOTAShowEconItemTooltip", panel, item_id, 0, -1);
-			});
-			panel.FindChildTraverse("TooltipTrigger")!.SetPanelEvent("onmouseout", () => {
-				$.DispatchEvent("DOTAHideEconItemTooltip", panel);
-			});
-		}
-	}
-
-	public SlotsUpdate(): void {
-		if (this.equipped_items_server == undefined || this.items_server == undefined) {
-			return;
-		}
-		const equipped_items = this.GetEquippedItems();
-		for (let i=0; i<$("#Slots").GetChildCount(); i++) {
-			const child = $("#Slots").GetChild(i)!;
-			const slot = child.GetAttributeString("name", "");
-			const equipped_item_id = equipped_items[slot];
-			if (equipped_item_id != undefined) {
-				const equipped_item = this.items_server[slot][equipped_item_id];
-				if (equipped_item != undefined) {
-					(child.FindChildTraverse("Econ")!.FindChildTraverse("Icon") as ImagePanel).SetImage(`s2r://panorama/images/${equipped_item["icon"]}_png.vtex`);
-					child.SetHasClass("NotDefault", equipped_item["type"] != "default_item");
-					child.SetHasClass("MultiStyles", equipped_item["styles"] > 1);
-					for (let j=0; j<this.rarities.length; j++) {
-						child.SetHasClass(`Rarity_${this.rarities[j]}`, equipped_item["rarity"] == this.rarities[j]);
-					}
-					const selected_style = this.GetEquippedItemStyle(slot);
-					(child.FindChildTraverse("Econ")!.FindChildTraverse("MultiStyle")!.FindChildTraverse("Selected") as LabelPanel).text = `${selected_style}/${equipped_item["styles"]}`;
-				}
-			} else {
-				(child.FindChildTraverse("Econ")!.FindChildTraverse("Icon") as ImagePanel).SetImage("s2r://panorama/images/econ/default_no_item_png.vtex");
-				child.SetHasClass("NotDefault", false);
-				child.SetHasClass("MultiStyles", false);
-				for (let j=0; j<this.rarities.length; j++) {
-					child.SetHasClass(`Rarity_${this.rarities[j]}`, false);
-				}
-			}
-		}
-	}
-
-	public ItemsUpdate(): void {
-		const slot = this.GetSelectedSlot();
-		if (slot == undefined) {
-			return;
-		}
-		const equipped_items = this.GetEquippedItems();
-		const equipped_item_id = equipped_items[slot];
-		for (let i=0; i<$("#Items").GetChildCount(); i++) {
-			const child = $("#Items").GetChild(i)!;
-			const item_id = child.GetAttributeInt("item_id", -1);
-			if (item_id == -1) {continue;};
-			child.SetHasClass("Equipped", item_id == equipped_item_id);
-		}
-	}
-
 	private CosmeticNetTableListener(tableName: string, keyName: string | number, data: NetworkedData<CustomNetTableDeclarations["cosmetic"][keyof CustomNetTableDeclarations["cosmetic"]]>): void {
 		if (typeof keyName == "string" && keyName.startsWith("slots_")) {
-			if (keyName == `slots_${GetLocalHeroName()}`) {
-				this.SlotsLoad(data);
+			if (keyName == `slots_${Game.GetLocalPlayerInfo()["player_selected_hero"]}`) {
+				Slot.Load(data);
 			}
 		}
 	}
@@ -484,15 +571,21 @@ class Cosmetic {
 			$.Schedule(0.1, () => {GameEvents.SendCustomGameEventToServer("cosmetic_request_items", {})});
 			return;
 		}
-		this.items_server = event["items"];
-		this.ItemsLoad(event["items"]);
+		Item.items_server = event["items"];
+		Item.items_server_cache = {};
+		for (const [slot_name, items] of Object.entries(Item.items_server)) {
+			for (const [item_id, item_info] of Object.entries(items)) {
+				Item.items_server_cache[parseInt(item_id)] = item_info;
+			}
+		}
+		Item.Load();
 		GameEvents.SendCustomGameEventToServer("cosmetic_request_equipped_items", {});
 	}
 
 	private CosmeticRespondEquippedItemsEvent(event: NetworkedData<CustomGameEventDeclarations["cosmetic_respond_equipped_items"]>) {
-		this.equipped_items_server = event["items"];
-		this.SlotsUpdate();
-		this.ItemsUpdate();
+		Item.equipped_items_server = event["items"];
+		Slot.Update();
+		Item.Update();
 	}
 }
 

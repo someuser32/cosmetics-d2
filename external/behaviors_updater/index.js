@@ -384,7 +384,7 @@ function GetKineticItems(html, items_game, dota_english) {
 		if (default_items == undefined || default_items.length <= 0) {
 			continue;
 		}
-		kinetics[name] = Object.fromEntries(default_items.map((item) => [item, 1]));
+		kinetics[name] = default_items;
 		delete kinetic_infos[localized_name];
 	}
 	non_configured_kinetics.push(...Object.keys(kinetic_infos))

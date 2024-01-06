@@ -59,7 +59,11 @@ interface SpecialBehaviorParticleInfo {
 		[control_point: string]: SpecialBehaviorParticleControlPoint
 	},
 	create_on_equip?: boolean,
-	owner?: string
+	owner?: string,
+	prismatic_gems?: {
+		control_point_enable: number,
+		control_points: [control_point: number]
+	}
 }
 
 interface SpecialBehaviorModelInfo {
@@ -85,17 +89,11 @@ interface SpecialBehavior extends SpecialBehaviorInfo {
 	parent_style?: number
 }
 
-interface KineticGemInfo {
-	[item_id: number]: 1
-}
-
 interface BehaviorsJSON {
 	items: {
 		[name: string]: SpecialBehavior
 	}
-	kinetic_gems: {
-		[name: string]: KineticGemInfo
-	}
+	kinetic_gems: KineticGems
 }
 
 interface ParticleReplacements {
@@ -166,4 +164,12 @@ interface ItemIconReplacement {
 
 interface ItemIconReplacements {
 	[item_icon: string]: ItemIconReplacement
+}
+
+interface KineticGems {
+    [gem_name: string]: [item_id: number]
+}
+
+interface ParticlePrismaticGems {
+	[particle_name: string]: SpecialBehaviorParticleInfo["prismatic_gems"]
 }
